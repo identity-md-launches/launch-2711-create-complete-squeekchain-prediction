@@ -115,7 +115,8 @@ contract SqueekPredictTest is Test {
         assertEq(d.startsAt, block.timestamp + 1 hours);
         assertEq(d.endsAt - d.startsAt, 1 days);
         assertEq(w.endsAt - w.startsAt, 7 days);
-        assertEq(d.refundAt - d.endsAt, 3 days);
+        assertEq(d.refundAt - d.endsAt, 30 days);
+        assertEq(predict.RESOLUTION_GRACE(), 30 days);
         assertEq(d.threshold, 10);
         assertEq(uint256(d.status), uint256(SqueekPredict.Status.Open));
     }
@@ -220,7 +221,7 @@ contract SqueekPredictTest is Test {
         _bet(id, bob, false, 1 ether);
     }
 
-    function test_StakeMinimumAndPoolCap() public {
+    function test_StakeMinimumAndPerSidePoolCap() public {
         uint256 id = _create(1);
         vm.expectRevert(SqueekPredict.InvalidStake.selector);
         _bet(id, alice, true, 0);
@@ -228,9 +229,48 @@ contract SqueekPredictTest is Test {
         _bet(id, alice, true, 0.0001 ether - 1);
         _bet(id, alice, true, 0.0001 ether);
         _bet(id, bob, false, 100 ether - 0.0001 ether);
+        // The NO side is still below its own cap; the YES side is independent of it.
+        _bet(id, bob, false, 0.0001 ether);
         vm.expectRevert(SqueekPredict.PoolLimit.selector);
-        _bet(id, alice, true, 0.0001 ether);
-        assertEq(predict.totalLiability(), 100 ether);
+        _bet(id, bob, false, 0.0001 ether);
+        _bet(id, alice, true, 100 ether - 0.0001 ether);
+        vm.expectRevert(SqueekPredict.PoolLimit.selector);
+        _bet(id, carol, true, 0.0001 ether);
+        assertEq(predict.getMarket(id).yesPool, 100 ether);
+        assertEq(predict.getMarket(id).noPool, 100 ether);
+        assertEq(predict.totalLiability(), 200 ether);
+    }
+
+    /// @dev Reviewer finding: a single shared cap let one side fill it and force a risk-free refund.
+    function test_OppositeSideCanStillEnterAfterOneSideIsFilled() public {
+        uint256 id = _create(10);
+        address griefer = makeAddr("griefer");
+        vm.deal(griefer, 100 ether);
+        _bet(id, alice, true, 40 ether);
+        _bet(id, griefer, true, 60 ether);
+        assertEq(predict.getMarket(id).yesPool, 100 ether);
+        _bet(id, bob, false, 0.0001 ether);
+        assertEq(predict.getMarket(id).noPool, 0.0001 ether);
+        vm.warp(predict.getMarket(id).startsAt);
+        // The griefer's full YES side no longer forces a risk-free refund: the market is matched.
+        vm.expectRevert(SqueekPredict.BothSidesFunded.selector);
+        predict.cancelUnmatched(id);
+        _settle(id, 100e9, 100e9);
+        assertFalse(predict.getMarket(id).yesWins);
+        assertEq(predict.claimable(id, griefer), 0);
+        assertEq(predict.claimable(id, bob), 100 ether + 0.0001 ether);
+    }
+
+    function test_FullBothSidesPayoutConservesPool() public {
+        uint256 id = _create(10);
+        _bet(id, alice, true, 100 ether);
+        _bet(id, bob, false, 100 ether);
+        _settle(id, 100e9, 111e9);
+        assertEq(predict.claimable(id, alice), 200 ether);
+        vm.prank(alice);
+        predict.claim(id, payable(alice));
+        assertEq(predict.totalLiability(), 0);
+        assertEq(address(predict).balance, 0);
     }
 
     function test_YesWinAndProportionalPayout() public {
@@ -316,6 +356,47 @@ contract SqueekPredictTest is Test {
         vm.expectRevert(SqueekPredict.NotSettled.selector);
         predict.resolve(id);
         assertEq(uint256(predict.getMarket(id).status), uint256(SqueekPredict.Status.Open));
+    }
+
+    /// @dev Reviewer finding: live Core certified round 1973 at 1793031636 and nothing for 3.7 days.
+    ///      A 3-day grace refunded every market whose last round fell in that outage; 30 days must not.
+    function test_MarketResolvesOnceCertifiedAfterObservedReporterOutage() public {
+        uint256 id = _create(0);
+        _fund(id);
+        SqueekPredict.Market memory m = predict.getMarket(id);
+        core.setPoint(m.startRound - 1, 100, 100e9);
+        core.setFrontier(m.endRound - 1);
+        vm.warp(m.endsAt);
+        vm.expectRevert(SqueekPredict.NotSettled.selector);
+        predict.resolve(id);
+
+        vm.warp(m.endsAt + 3 days + 17 hours);
+        vm.expectRevert(SqueekPredict.TooEarly.selector);
+        predict.cancelExpired(id);
+        core.setPoint(m.endRound, 200, 101e9);
+        core.setFrontier(m.endRound);
+        predict.resolve(id);
+        m = predict.getMarket(id);
+        assertEq(uint256(m.status), uint256(SqueekPredict.Status.Resolved));
+        assertTrue(m.yesWins);
+        assertEq(predict.claimable(id, alice), 5 ether);
+        assertEq(predict.claimable(id, bob), 0);
+    }
+
+    function test_ResolutionStillPossibleLateInGraceAndRefundOnlyAfterIt() public {
+        uint256 id = _create(0);
+        _fund(id);
+        SqueekPredict.Market memory m = predict.getMarket(id);
+        core.setPoint(m.endRound, 100, 1e9);
+        core.setFrontier(m.endRound - 1);
+        vm.warp(m.endsAt + 29 days);
+        vm.expectRevert(SqueekPredict.NotSettled.selector);
+        predict.resolve(id);
+        vm.expectRevert(SqueekPredict.TooEarly.selector);
+        predict.cancelExpired(id);
+        core.setFrontier(m.endRound);
+        predict.resolve(id);
+        assertTrue(predict.getMarket(id).yesWins);
     }
 
     function test_PausedCoreCanResolveAlreadyCertifiedHistory() public {

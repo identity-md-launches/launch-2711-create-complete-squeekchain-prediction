@@ -33,8 +33,8 @@ Build artifacts are produced with optimizer runs `200`, Cancun EVM and `bytecode
 
 1. Paste the **confirmed SqueekPredict address** into the frontend, select Sepolia and connect your wallet.
 2. Create a market: choose a target, 24 hours or 7 days, and a betting period. The UI suggests a round boundary roughly 2, 6 or 24 hours ahead. Review the resulting transaction and the mined market's exact times.
-3. Participants bet YES or NO before betting closes. The minimum is `0.0001` test ETH and the total pool cap is `100` test ETH per market. A wallet can add multiple stakes or hold both sides. Stakes cannot be withdrawn during betting.
-4. After the measurement window ends, **anyone** clicks **Resolve from SqueekCore**. The transaction succeeds only once Core has certified the entire window. A delayed settlement can be retried before the refund deadline.
+3. Participants bet YES or NO before betting closes. The minimum is `0.0001` test ETH and each side is capped at `100` test ETH per market, so a full YES pool still accepts NO stakes and vice versa. A wallet can add multiple stakes or hold both sides. Stakes cannot be withdrawn during betting.
+4. After the measurement window ends, **anyone** clicks **Resolve from SqueekCore**. The transaction succeeds only once Core has certified the entire window. A delayed settlement can be retried at any time during the 30-day resolution grace, which is sized to outlast the multi-day Reporter outages observed on Sepolia.
 5. Winners click **Claim payout / refund**. Each wallet claims its own position and can choose a receiving address, including an alternative if its original wallet cannot receive ETH.
 
 Refresh to update pools, chain time and settlement. The frontend shows the most recent 20 markets and can find older ones by ID. Wallet account or chain changes require reconnecting. It does not automatically sign or submit anything. Listings and refunds remain accessible when Core reads fail.
@@ -49,7 +49,7 @@ The creator chooses `startRound`, the first included Squeek round, and a duratio
 startsAt = g + (s - 1) × 600       betting closes at this timestamp
 endRound = (s - 1) + duration / 600
 endsAt   = startsAt + duration
-refundAt = endsAt + 3 days
+refundAt = endsAt + 30 days
 ```
 
 The start must be between **1 hour and 7 days ahead** at creation. A full measurement window begins **after betting closes**; creating a market does not start measuring immediately. This prevents bets after observing the result. Periods align to Core's ten-minute rounds, so the MVP does not offer arbitrary wall-clock starting seconds.
@@ -84,9 +84,11 @@ Only the winning-side stake is used in that fraction, even if a wallet bet on bo
 
 If either side has no stake, anyone can call `cancelUnmatched(id)` once betting closes. All stakes are refundable, regardless of what the hamster later does. `resolve` also cancels such a market if called with valid settled data.
 
-At **`refundAt` or later**, anyone can call `cancelExpired(id)` on any still-open market. This needs **no Core call**, so oracle outages, pauses or incompatible upgrades cannot permanently lock the deposits. Resolution is allowed only while `endsAt <= timestamp < refundAt`. After cancellation, users recover the sum of their YES and NO stakes. After successful resolution, a timeout cannot overturn the result.
+At **`refundAt` or later**, anyone can call `cancelExpired(id)` on any still-open market. This needs **no Core call**, so oracle outages, pauses or incompatible upgrades cannot permanently lock the deposits. Resolution is allowed only while `endsAt <= timestamp < refundAt`, and the refund is never available inside that window, so a losing side cannot race a late resolution with a cancellation. After cancellation, users recover the sum of their YES and NO stakes. After successful resolution, a timeout cannot overturn the result.
 
-Claims follow checks/effects/interactions and use a reentrancy guard. A rejecting receiver rolls back only its own claim; it can retry to another address. Claims never push payments to a list of users. Each market tracks its own remaining payout, and `totalLiability` tracks all unpaid participant funds. The `100 ETH` cap also bounds payout multiplication safely. Direct ETH transfers revert; forcibly delivered surplus is excluded from pools and has no recovery function.
+The resolution grace is **30 days** (`RESOLUTION_GRACE`). The Squeekchain Reporter certifies rounds in batches and has fallen more than three days behind wall-clock time on Sepolia (round 1973 was the certified frontier for over 3.7 days at the end of October 2026). An earlier 3-day grace would have refunded every market whose window ended during such an outage even though Core later certified the result; 30 days keeps those markets resolvable from official data. The cost is that a market whose last round Core never certifies holds its stakes for up to 30 days after the window before `cancelExpired` opens refunds.
+
+Claims follow checks/effects/interactions and use a reentrancy guard. A rejecting receiver rolls back only its own claim; it can retry to another address. Claims never push payments to a list of users. Each market tracks its own remaining payout, and `totalLiability` tracks all unpaid participant funds. The per-side `100 ETH` cap (`MAX_SIDE_POOL`, at most `200 ETH` per market) also bounds payout multiplication safely. Capping each side separately means a wallet that fills one side cannot lock the other side out and force a risk-free refund through `cancelUnmatched`; voiding a market now requires exposure on both sides. Direct ETH transfers revert; forcibly delivered surplus is excluded from pools and has no recovery function.
 
 ## Contract calls
 
@@ -106,7 +108,7 @@ Market status values are `0 = Open`, `1 = Resolved`, `2 = Cancelled`. Open inclu
 
 ## After launch
 
-There are **no owner settings or post-deployment setters**. All numeric choices are the named public constants in `SqueekPredict.sol`: chain `11155111`, round duration `600`, block units `10^9`, supported windows `1/7 days`, minimum/maximum lead `1 hour/7 days`, resolution grace `3 days`, minimum stake `0.0001 ETH`, and pool cap `100 ETH`.
+There are **no owner settings or post-deployment setters**. All numeric choices are the named public constants in `SqueekPredict.sol`: chain `11155111`, round duration `600`, block units `10^9`, supported windows `1/7 days`, minimum/maximum lead `1 hour/7 days`, resolution grace `30 days`, minimum stake `0.0001 ETH`, and per-side pool cap `100 ETH`.
 
 The deployment operator publishes the confirmed contract address and hosts the `frontend/` folder. Before accepting bets, recheck the official Core deployment and ABI. A read-only check is provided:
 
@@ -116,13 +118,13 @@ node scripts/read-core.cjs https://ethereum-sepolia-rpc.publicnode.com
 
 This reads at one Ethereum block 12 blocks behind the tip and checks Core version, unit scale, height/progress and the certified historical endpoint. It does not sign, settle Core, or resolve markets. The [saved observation](docs/core-observation.json) is evidence of an integration read during development, not a current oracle feed or an identity attestation.
 
-Participants or a volunteer keeper must pay gas to resolve/cancel and users must claim their own funds. There is no automation service or keeper reward. If nobody submits resolution before the fixed deadline, the market refunds even if data was available. Anyone can run these operations, so an operator going offline does not grant special control over funds.
+Participants or a volunteer keeper must pay gas to resolve/cancel and users must claim their own funds. There is no automation service or keeper reward. If nobody submits resolution within the 30-day grace, the market refunds even if data was available. Operators should watch Core's `settledThroughRound` against the wall-clock round: a Reporter outage longer than the grace is the one condition under which decided markets are refunded. Anyone can run these operations, so an operator going offline does not grant special control over funds.
 
 The Squeekchain Reporter and governance remain trusted for the underlying history and its availability. Implementation pinning detects a changed pointer; it is not a cryptographic proof of physical wheel activity and cannot detect every same-ABI semantic change. Settlement can be delayed, and Ethereum can reorganize. Confirmation handling and monitoring belong to operators and users. This MVP accepts test ETH only by convention; never use this deployment or a fork with valuable funds without independent adversarial review.
 
 ## Verification and limitations
 
-See [security review notes](docs/SECURITY_REVIEW.md) for the concrete threat analysis and tested failure paths. Tests cover daily/weekly windows, strict thresholds, progress carry, zero-work gaps, delayed/batched settlement, source failure/change, timing boundaries, invalid bets, pool caps, wallet positions on both sides, proportional payout, rounding, duplicate actions, rejecting receivers, reentrancy, cross-market isolation, and stateful conservation.
+See [security review notes](docs/SECURITY_REVIEW.md) for the concrete threat analysis and tested failure paths. Tests cover daily/weekly windows, strict thresholds, progress carry, zero-work gaps, delayed/batched settlement including a replay of the observed 3.7-day Reporter outage, source failure/change, timing boundaries, invalid bets, per-side pool caps and a filled side that cannot lock the other out, wallet positions on both sides, proportional payout, rounding, duplicate actions, rejecting receivers, reentrancy, cross-market isolation, and stateful conservation.
 
 The frontend is deliberately small: it has no indexer, backend, fixed-price shares, secondary trading or automated settlement. Pool values are RPC snapshots; only transaction execution establishes the final state. The local tests are not an independent security audit, and no deployment or real-wallet transaction was performed for this deliverable.
 

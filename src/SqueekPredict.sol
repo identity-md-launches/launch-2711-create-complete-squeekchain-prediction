@@ -15,10 +15,14 @@ contract SqueekPredict {
     uint64 public constant WEEK = 7 days;
     uint64 public constant MIN_LEAD_TIME = 1 hours;
     uint64 public constant MAX_LEAD_TIME = 7 days;
-    uint64 public constant RESOLUTION_GRACE = 3 days;
+    // Resolution stays exclusive for this long after the window ends. The Reporter has certified
+    // rounds more than 3 days late on Sepolia, so this must comfortably outlast such an outage;
+    // a market is refunded only if Core never certifies its last round within it.
+    uint64 public constant RESOLUTION_GRACE = 30 days;
     uint256 public constant MIN_BET = 0.0001 ether;
+    // Per-side cap: one side filling up cannot lock the other side out of the market.
     // Bounds stake * pool well below uint256.max; also limits exposure for this MVP.
-    uint256 public constant MAX_POOL = 100 ether;
+    uint256 public constant MAX_SIDE_POOL = 100 ether;
 
     enum Status {
         Open,
@@ -138,11 +142,12 @@ contract SqueekPredict {
     }
 
     /// @notice Adds Sepolia ETH to either side. A wallet may add stakes on both sides.
+    /// @dev Each side is capped on its own, so a full YES pool still accepts NO stakes and vice versa.
     function bet(uint256 id, bool yes) external payable {
         Market storage m = _openMarket(id);
         if (block.timestamp >= m.startsAt) revert BettingClosed();
         if (msg.value < MIN_BET) revert InvalidStake();
-        if (msg.value > MAX_POOL - m.yesPool - m.noPool) revert PoolLimit();
+        if (msg.value > MAX_SIDE_POOL - (yes ? m.yesPool : m.noPool)) revert PoolLimit();
         Position storage p = positions[id][msg.sender];
         if (yes) {
             p.yes += msg.value;
@@ -156,7 +161,8 @@ contract SqueekPredict {
     }
 
     /// @notice Anyone can resolve using exact certified endpoints, including after delayed settlement.
-    /// @dev Resolution is disabled at refundAt, eliminating a refund/resolution race at that boundary.
+    /// @dev Resolution is disabled at refundAt, eliminating a refund/resolution race at that boundary:
+    ///      a losing side can never front-run a late resolution with cancelExpired.
     function resolve(uint256 id) external {
         Market storage m = _openMarket(id);
         if (block.timestamp < m.endsAt) revert TooEarly();

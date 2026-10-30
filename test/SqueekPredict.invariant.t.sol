@@ -26,7 +26,7 @@ contract MarketHandler is Test {
         uint256 id = 1 + marketSeed % 4;
         SqueekPredict.Market memory m = predict.getMarket(id);
         if (m.status != SqueekPredict.Status.Open || block.timestamp >= m.startsAt) return;
-        uint256 available = predict.MAX_POOL() - m.yesPool - m.noPool;
+        uint256 available = predict.MAX_SIDE_POOL() - (yes ? m.yesPool : m.noPool);
         if (available < predict.MIN_BET()) return;
         uint256 amount = bound(amountSeed, predict.MIN_BET(), available < 5 ether ? available : 5 ether);
         address actor = actors[actorSeed % actors.length];

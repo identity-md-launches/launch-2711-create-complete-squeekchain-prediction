@@ -149,7 +149,7 @@
       const sendBet = (yes) => transact(() => {
         const value = parseEther(input.value.trim());
         if (value < 100000000000000n) throw new Error("Minimum stake is 0.0001 Sepolia ETH.");
-        if (m.yesPool + m.noPool + value > 100000000000000000000n) throw new Error("This stake exceeds the 100 ETH pool limit.");
+        if ((yes ? m.yesPool : m.noPool) + value > 100000000000000000000n) throw new Error(`This stake exceeds the 100 ETH ${yes ? "YES" : "NO"} pool limit.`);
         return market.bet(id, yes, { value });
       });
       const choices = element("div", undefined, "row");
