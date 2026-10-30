@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Squeek Predict · Hamster-powered predictions</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="vendor/ethers-6.15.0.umd.min.js"></script>
+  <script defer src="helpers.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <header>
+    <a class="brand" href="./"><span class="wheel" aria-hidden="true">◉</span> Squeek Predict</a>
+    <span class="pill">Sepolia testnet</span>
+  </header>
+  <main>
+    <section class="hero">
+      <p class="eyebrow">Squeekchain ecosystem · Buildooooor project</p>
+      <h1>Small hamster.<br>Big predictions.</h1>
+      <p>Will the hamster complete more than your target number of Squeek blocks?
+        Pick a side. Official settled SqueekCore data decides.</p>
+      <p class="notice">Experimental MVP · Test ETH only. Stakes can be lost. Payouts depend on the final pools.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="connect-title">
+      <h2 id="connect-title">Open the market</h2>
+      <p>Use the confirmed SqueekPredict address from your deployment handoff. An Ethereum browser wallet is required.</p>
+      <label for="deployment">SqueekPredict contract address</label>
+      <div class="row"><input id="deployment" autocomplete="off" spellcheck="false" placeholder="Paste confirmed Sepolia deployment address">
+        <button id="connect" type="button">Connect &amp; load</button>
+        <button id="switch" class="secondary" type="button">Switch to Sepolia</button></div>
+      <p id="wallet" class="muted">Wallet disconnected</p>
+      <p id="status" role="status" aria-live="polite">No deployment selected.</p>
+    </section>
+
+    <section id="workspace" hidden>
+      <section class="stats" aria-label="Official settled Squeekchain data">
+        <div><span>Settled block height</span><strong id="height">—</strong></div>
+        <div><span>Certified through round</span><strong id="frontier">—</strong></div>
+        <div><span>Settlement status</span><strong id="core-status">—</strong></div>
+      </section>
+      <div class="two-col">
+        <section class="panel" aria-labelledby="create-title">
+          <h2 id="create-title">Create a prediction</h2>
+          <p>The window starts after betting closes, on a ten-minute Squeek round boundary. Equality means NO.</p>
+          <p id="core-warning" class="notice" hidden>Core is unavailable or unsupported. Creation is disabled; existing markets, refunds and claims remain accessible.</p>
+          <form id="create-form">
+            <label for="threshold">Will the hamster complete more than this many blocks?</label>
+            <input id="threshold" type="text" inputmode="numeric" pattern="[0-9]+" value="100" required>
+            <div class="row">
+              <div><label for="duration">Measurement window</label><select id="duration"><option value="86400">24 hours</option><option value="604800">7 days</option></select></div>
+              <div><label for="lead">Betting closes in about</label><select id="lead"><option value="7200">2 hours</option><option value="21600">6 hours</option><option value="86400">24 hours</option></select></div>
+            </div>
+            <p id="preview" class="muted"></p>
+            <button type="submit">Create market</button>
+          </form>
+        </section>
+        <section class="panel" aria-labelledby="rules-title">
+          <h2 id="rules-title">Follow the settled work</h2>
+          <ol>
+            <li>Stake Sepolia ETH on YES or NO before the window starts.</li>
+            <li>After the window ends, anyone can resolve once Core certifies its final round.</li>
+            <li>Winners claim their share of both pools. There is no fee.</li>
+          </ol>
+          <p>One-sided markets refund after betting closes. Unresolved markets refund three days after the window ends.</p>
+          <p class="muted">Core is an external, upgradeable source. A changed implementation prevents resolution; the timeout still allows refunds.</p>
+          <a href="https://docs.squeekchain.com/developers/core/" target="_blank" rel="noopener noreferrer">Read the official SqueekCore reference ↗</a>
+        </section>
+      </div>
+      <section class="market-heading">
+        <h2>Predictions</h2>
+        <button id="refresh" class="secondary" type="button">Refresh</button>
+      </section>
+      <form id="find-form" class="row lookup">
+        <label for="market-id">Find by market ID</label>
+        <input id="market-id" type="text" inputmode="numeric" pattern="[0-9]+" required>
+        <button class="secondary" type="submit">Find</button>
+      </form>
+      <p class="muted">Showing the latest 20 markets. Refresh to update pools and settlement. All times use your browser's timezone.</p>
+      <div id="markets" class="markets" aria-live="polite"></div>
+    </section>
+  </main>
+  <footer>A community experiment for the Squeekchain ecosystem / Buildooooor badge. No badge issuance or official endorsement is implied.</footer>
+</body>
+</html>

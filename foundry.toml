@@ -1,0 +1,19 @@
+[profile.default]
+src = "src"
+test = "test"
+out = "out"
+libs = ["lib"]
+solc = "0.8.26"
+evm_version = "cancun"
+optimizer = true
+optimizer_runs = 200
+bytecode_hash = "none"
+
+[profile.default.fuzz]
+runs = 256
+seed = "0x096286e5cbd685072021ae4918c80601e10b2c032db0b5b3e0f9f8cf717606ec"
+
+[profile.default.invariant]
+runs = 128
+depth = 64
+fail_on_revert = true

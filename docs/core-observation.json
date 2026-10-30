@@ -1,0 +1,19 @@
+{
+  "chainId": "11155111",
+  "core": "0x74665dAecA35A2303e767E76a2FF1FB6F93e119f",
+  "ethereumBlock": 12025776,
+  "ethereumBlockHash": "0x63361eedd8226490f67433cc9f67e325c49894f12f4b7066871e42ae6c817d2b",
+  "ethereumTimestamp": 1793352480,
+  "version": "3",
+  "implementation": "0x0a71C86ab63a77675002A389FDF4D096A07b11e2",
+  "streamId": "0xa0186b1a24b217f12f56c8574b492e286d00cd94bb5546cba45b048b19c60e44",
+  "genesisTimestamp": "1791847800",
+  "roundDuration": "600",
+  "blockUnitsPerBlock": "1000000000",
+  "settledThroughRound": "1973",
+  "cumulativeWork": "148986",
+  "cumulativeBlockUnits": "13095604188187",
+  "blockHeight": "13095",
+  "blockProgress": "604188187",
+  "paused": false
+}
