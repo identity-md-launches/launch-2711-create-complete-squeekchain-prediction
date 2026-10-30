@@ -14,7 +14,8 @@ contract StatefulRejectingRecipient {
 
 contract PredictLifecycleHandler is Test {
     uint256 internal constant MINIMUM = 0.0001 ether;
-    uint256 internal constant LIMIT = 100 ether;
+    uint256 internal constant LIMIT = 100 ether; // Per side.
+    uint256 internal constant GRACE = 30 days;
     uint256 internal constant INITIAL_BALANCE = 1_000_000 ether;
     uint64 internal constant GENESIS = 1_700_000_000;
     uint256 internal constant ACTORS = 6;
@@ -105,7 +106,7 @@ contract PredictLifecycleHandler is Test {
         uint256 id = _id(marketSeed);
         uint256 actor = actorSeed % ACTORS;
         Model storage m = models[id];
-        uint256 room = LIMIT - m.yes - m.no;
+        uint256 room = LIMIT - (side ? m.yes : m.no);
         uint256 mode = amountSeed % 8;
         uint256 amount;
         if (mode == 0) amount = 0;
@@ -150,7 +151,7 @@ contract PredictLifecycleHandler is Test {
         uint256 time = m.startsAt;
         uint256 boundary = boundarySeed % 3;
         if (boundary != 0) time += m.duration;
-        if (boundary == 2) time += 3 days;
+        if (boundary == 2) time += GRACE;
         time = time - 1 + offsetSeed % 3;
         if (time > block.timestamp) vm.warp(time);
     }
@@ -168,7 +169,7 @@ contract PredictLifecycleHandler is Test {
         Model storage m = models[id];
         uint256 action = actionSeed % 3;
         uint256 ends = uint256(m.startsAt) + m.duration;
-        uint256 refund = ends + 3 days;
+        uint256 refund = ends + GRACE;
         bytes4 error;
         bool offlineFailure;
         if (m.status != SqueekPredict.Status.Open) {
@@ -279,7 +280,8 @@ contract PredictLifecycleHandler is Test {
             SqueekPredict.Market memory actual = market.getMarket(id);
             assertEq(actual.yesPool, expected.yes);
             assertEq(actual.noPool, expected.no);
-            assertLe(actual.yesPool + actual.noPool, LIMIT);
+            assertLe(actual.yesPool, LIMIT);
+            assertLe(actual.noPool, LIMIT);
             unpaid += expected.yes + expected.no - expected.paid;
             uint256 remainingStake;
             uint256 previews;
@@ -338,7 +340,7 @@ contract PredictLifecycleHandler is Test {
             assertEq(actual.endRound, expected.startRound - 1 + expected.duration / 600);
             assertEq(actual.startsAt, expected.startsAt);
             assertEq(actual.endsAt, uint256(expected.startsAt) + expected.duration);
-            assertEq(actual.refundAt, uint256(expected.startsAt) + expected.duration + 3 days);
+            assertEq(actual.refundAt, uint256(expected.startsAt) + expected.duration + GRACE);
             assertEq(actual.genesisTimestamp, GENESIS);
             assertEq(actual.streamId, oracle.STREAM());
             assertEq(actual.implementation, address(oracle));
@@ -354,7 +356,7 @@ contract PredictLifecycleHandler is Test {
         oracle.setAvailability(true, true);
         uint256 deadline = vm.getBlockTimestamp();
         for (uint256 id = 1; id < models.length; ++id) {
-            uint256 refund = uint256(models[id].startsAt) + models[id].duration + 3 days;
+            uint256 refund = uint256(models[id].startsAt) + models[id].duration + GRACE;
             if (refund > deadline) deadline = refund;
         }
         vm.warp(deadline);

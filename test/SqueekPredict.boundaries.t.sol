@@ -61,7 +61,7 @@ contract SqueekPredictBoundariesTest is PredictTestBase {
         assertLt(m.startsAt - block.timestamp, 1 hours + 600);
         assertEq(m.endsAt - m.startsAt, duration);
         assertEq(m.endRound - m.startRound + 1, weekly ? 1008 : 144);
-        assertEq(m.refundAt - m.endsAt, 3 days);
+        assertEq(m.refundAt - m.endsAt, 30 days);
         assertEq(m.genesisTimestamp, GENESIS);
         assertEq(m.streamId, oracle.configuration().streamId);
         assertEq(m.implementation, CORE);
@@ -107,6 +107,60 @@ contract SqueekPredictBoundariesTest is PredictTestBase {
         vm.prank(alice);
         market.claim(id, payable(recipient));
         assertEq(recipient.balance, 2 ether);
+    }
+
+    function testFuzz_ResolutionAndTimeoutRefundNeverOverlapAcrossTheGrace(uint32 lateness) public {
+        uint256 id = _matched(0);
+        SqueekPredict.Market memory m = market.getMarket(id);
+        assertEq(m.refundAt - m.endsAt, market.RESOLUTION_GRACE());
+        oracle.setPoint(m.startRound - 1, 100, 0);
+        oracle.setPoint(m.endRound, 200, 1e9);
+        oracle.setFrontier(m.endRound);
+        uint256 t = m.endsAt + bound(lateness, 0, m.refundAt - m.endsAt - 1);
+        vm.warp(t);
+        // Inside the grace a losing side cannot pre-empt resolution with a refund.
+        vm.expectRevert(SqueekPredict.TooEarly.selector);
+        market.cancelExpired(id);
+        market.resolve(id);
+        assertTrue(market.getMarket(id).yesWins);
+        assertEq(market.claimable(id, alice), 5 ether);
+        vm.warp(m.refundAt + 1);
+        vm.expectRevert(SqueekPredict.MarketFinalized.selector);
+        market.cancelExpired(id);
+    }
+
+    function test_CertifiedDataAtRefundAtCannotResolveOnlyRefund() public {
+        uint256 id = _matched(0);
+        SqueekPredict.Market memory m = market.getMarket(id);
+        oracle.setPoint(m.startRound - 1, 100, 0);
+        oracle.setPoint(m.endRound, 200, 1e9);
+        oracle.setFrontier(m.endRound);
+        vm.warp(m.refundAt);
+        vm.expectRevert(SqueekPredict.ResolutionExpired.selector);
+        market.resolve(id);
+        market.cancelExpired(id);
+        assertEq(market.claimable(id, alice), 2 ether);
+        assertEq(market.claimable(id, bob), 3 ether);
+    }
+
+    function testFuzz_EachSideIsCappedIndependentlyToTheWei(uint96 firstSeed, bool fullSide) public {
+        uint256 id = _create(0);
+        uint256 first = bound(firstSeed, MINIMUM, LIMIT - MINIMUM);
+        vm.deal(alice, 2 * LIMIT);
+        vm.deal(bob, 2 * LIMIT);
+        _bet(id, alice, fullSide, first);
+        _bet(id, bob, fullSide, LIMIT - first);
+        vm.expectRevert(SqueekPredict.PoolLimit.selector);
+        _bet(id, bob, fullSide, MINIMUM);
+        // The full side does not consume the other side's room.
+        _bet(id, alice, !fullSide, LIMIT);
+        vm.expectRevert(SqueekPredict.PoolLimit.selector);
+        _bet(id, bob, !fullSide, MINIMUM);
+        SqueekPredict.Market memory m = market.getMarket(id);
+        assertEq(m.yesPool, LIMIT);
+        assertEq(m.noPool, LIMIT);
+        assertEq(market.totalLiability(), 2 * LIMIT);
+        assertEq(address(market).balance, 2 * LIMIT);
     }
 
     function test_OneWeiAndOversizedBetsRevertWithoutChangingAccounting() public {

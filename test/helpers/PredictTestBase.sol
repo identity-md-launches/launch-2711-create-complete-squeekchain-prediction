@@ -10,7 +10,7 @@ abstract contract PredictTestBase is Test {
     uint64 internal constant GENESIS = 1_700_000_000;
     uint64 internal constant START_ROUND = 107;
     uint256 internal constant MINIMUM = 0.0001 ether;
-    uint256 internal constant LIMIT = 100 ether;
+    uint256 internal constant LIMIT = 100 ether; // Per side.
     address internal constant CORE = 0x74665dAecA35A2303e767E76a2FF1FB6F93e119f;
     SqueekPredict internal market;
     MockSqueekCore internal oracle;
