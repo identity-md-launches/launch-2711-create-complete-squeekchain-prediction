@@ -1,0 +1,18 @@
+[
+  {
+    "engine": "chromium",
+    "passed": true,
+    "checks": [
+      "create dialog",
+      "connect gate",
+      "Escape",
+      "focus path",
+      "modal axe scan",
+      "320 reflow",
+      "reduced motion",
+      "200% text enlargement",
+      "RTL reflow",
+      "no page errors or missing local resources"
+    ]
+  }
+]

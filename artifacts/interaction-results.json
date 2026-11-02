@@ -1,0 +1,63 @@
+{
+  "results": [
+    {
+      "name": "Subpath export and real RPC reads",
+      "passed": true
+    },
+    {
+      "name": "Six lifecycle states render; open markets and bet controls lead at 390",
+      "passed": true
+    },
+    {
+      "name": "Status, duration, and search filters; reset empty results",
+      "passed": true
+    },
+    {
+      "name": "Connect sheet EIP-6963 discovery, Escape, focus return, and connect",
+      "passed": true
+    },
+    {
+      "name": "Wrong chain disables transactions and switches through wallet control",
+      "passed": true
+    },
+    {
+      "name": "Bet validation, changing side/amount, rejected signature and successful payable bet",
+      "passed": true
+    },
+    {
+      "name": "Positions and winnings: exact claim calldata and claimed state",
+      "passed": true
+    },
+    {
+      "name": "Unmatched refunds open then claim; permissionless resolution",
+      "passed": true
+    },
+    {
+      "name": "Create weekly market with strict integer validation and round-aligned calldata",
+      "passed": true
+    },
+    {
+      "name": "Lookup older market by ID isolates the result",
+      "passed": true
+    },
+    {
+      "name": "Help dialog keyboard path and no accessibility scan violations on market grid",
+      "passed": true
+    },
+    {
+      "name": "Mobile widths 320/390/768: no overflow, main action above fold, usable betting form",
+      "passed": true
+    },
+    {
+      "name": "Phone wallet picker has four app links, Coinbase Smart Wallet, no QR",
+      "passed": true
+    },
+    {
+      "name": "RPC failure and retry recover without fake markets; mismatch blocks writes",
+      "passed": true
+    }
+  ],
+  "passed": 14,
+  "failed": 0,
+  "note": "One read-only live RPC check; all market, position, wallet and transaction interactions use test-only mocked RPC fixtures. No transactions were broadcast."
+}

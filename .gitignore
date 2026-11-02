@@ -1,3 +1,13 @@
 out/
 cache/
 broadcast/
+
+# Frontend generated paths: submission budget 0 bytes each, at every nesting level.
+**/node_modules/
+**/.vite/
+**/playwright-report/
+**/test-results/
+
+# Delivered validation evidence: artifacts/ has a 1.5 MiB (1572864 byte) budget.
+!artifacts/
+!artifacts/**

@@ -1,0 +1,18 @@
+{
+  "observedAt": "2026-11-02T21:53:07.850Z",
+  "chainId": 11155111,
+  "predictAddress": "0x8bd658e58e94ab6a18a8b9d8c6108d1287facacf",
+  "sourceCommit": "841002e57646285ae0bd5a31e9af3c08f4f4839d",
+  "abiHash": "0x3d6fa830e7687fd236ee229edff0d15994319e898520fc82bc4e75ae1c3987ec",
+  "expectedRuntimeHash": "0xa428c2a0ae99d4bd68a02aa893d5cc70698af0c82d478efa475e35adeee6555b",
+  "blockNumber": 12050951,
+  "blockTimestamp": "2026-11-02T21:53:00.000Z",
+  "observedRuntimeHash": "0xa428c2a0ae99d4bd68a02aa893d5cc70698af0c82d478efa475e35adeee6555b",
+  "marketCount": "0",
+  "coreAddress": "0x74665dAecA35A2303e767E76a2FF1FB6F93e119f",
+  "coreBlockHeight": "13095",
+  "coreSettledThroughRound": "1973",
+  "corePaused": false,
+  "runtimeMatches": true,
+  "note": "Read-only browser observation of the configured public RPC. No wallet connected and no transaction sent. Counts are historical observations, never product seed data."
+}
