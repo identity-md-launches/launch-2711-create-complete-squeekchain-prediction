@@ -49,3 +49,23 @@ test('tiny positive balances are never displayed as zero', () => {
   assert.equal(eth(0n), '0');
   assert.equal(eth(parseEther('0.001')), '0.001');
 });
+import { odds, kind, line, sideName, roundAt, roundStart, checkStart } from '../src/model.ts';
+test('pool odds, sides and market kinds follow the contract rule', () => {
+  assert.equal(odds({ yesPool: parseEther('3'), noPool: parseEther('1') }, true), 1.333);
+  assert.equal(odds({ yesPool: parseEther('3'), noPool: parseEther('1') }, false), 4);
+  assert.equal(odds({ yesPool: 0n, noPool: parseEther('1') }, true), null);
+  assert.equal(line(1000n), '1,000.5');
+  assert.equal(sideName({ threshold: 0n }, true), 'Runs');
+  const day = { startsAt: 0n, endsAt: 86400n };
+  assert.equal(kind({ ...day, threshold: 0n }), 'Activity');
+  assert.equal(kind({ ...day, threshold: 1200n }, 1100), 'Record attempt');
+  assert.equal(kind({ ...day, threshold: 900n }, 1100), 'Daily total');
+  assert.equal(kind({ startsAt: 0n, endsAt: 604800n, threshold: 900n }), 'Weekly total');
+});
+test('custom starts snap to the next round and respect the lead window', () => {
+  assert.equal(roundStart(1000n, roundAt(1000n, 1000n)), 1000n);
+  assert.equal(roundStart(1000n, roundAt(1000n, 1001n)), 1600n);
+  assert.throws(() => checkStart(10000n + 3600n, 10000n));
+  assert.doesNotThrow(() => checkStart(10000n + 3900n, 10000n));
+  assert.throws(() => checkStart(10000n + 604800n, 10000n));
+});

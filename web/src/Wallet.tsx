@@ -25,7 +25,7 @@ export function Wallet({ open, setOpen }: { open: boolean; setOpen: (value: bool
   }
   return <>
     <button className="wallet-button" onClick={() => { setError(''); if (wrong) void switchNetwork(); else if (isConnected) setAccountOpen(true); else setOpen(true); }}>
-      <Icon name="wallet" size={18}/><span>{switching ? 'Switching…' : wrong ? 'Switch to Sepolia' : address ? shortAddress(address) : 'Connect wallet'}</span>
+      <Icon name="wallet" size={18}/><span>{switching ? 'Switching…' : wrong ? 'Switch to Sepolia' : address ? shortAddress(address) : <>Connect<span className="wide-only"> wallet</span></>}</span>
     </button>
     {open && !isConnected && <Modal title="Connect a wallet" onClose={() => setOpen(false)} className="wallet-modal">
       <p className="muted">Use Sepolia test ETH to make your prediction.</p>
@@ -37,10 +37,10 @@ export function Wallet({ open, setOpen }: { open: boolean; setOpen: (value: bool
         </button>)}
       </div>
       <p className="wallet-notice" role="status">{error}</p>
-      <p className="caption muted">Connecting never places a bet. Every transaction needs your approval.</p>
+      <p className="small muted">Connecting never places a bet. Every transaction needs your approval.</p>
     </Modal>}
     {accountOpen && address && <Modal title="Your wallet" onClose={() => setAccountOpen(false)}>
-      <p className="caption muted">{wrong ? 'Switch to Sepolia to place bets or claim.' : 'Connected to Sepolia'}</p><p className="address">{getAddress(address)}</p>
+      <p className="small muted">{wrong ? 'Switch to Sepolia to place bets or claim.' : 'Connected to Sepolia'}</p><p className="address">{getAddress(address)}</p>
       {wrong && <button className="primary full" onClick={() => void switchNetwork()} disabled={switching}>{switching ? 'Switching…' : 'Switch to Sepolia'}</button>}
       <a className="button secondary full" href={`${chain.blockExplorers.default.url}/address/${address}`} target="_blank" rel="noreferrer">View wallet on Etherscan<Icon name="external" size={16}/></a>
       <button className="secondary full" onClick={() => { disconnect(); setAccountOpen(false); }}>Disconnect</button><p className="wallet-notice" role="status">{error}</p>

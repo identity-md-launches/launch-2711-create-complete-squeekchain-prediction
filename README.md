@@ -6,7 +6,7 @@ The market reads the official settled ledger directly from **SqueekCore V3**, th
 
 ## Website: install, preview and rebuild
 
-The production site is **`dist/index.html`** with its local assets. The maintained frontend source is **`web/`** (React, TypeScript, Vite). The earlier `frontend/` is retained as the original minimal client; it is not the published export.
+The production site is **`dist/index.html`** with its local assets. The maintained frontend source is **`web/`** (React 19, TypeScript, Vite, wagmi/viem). The earlier `frontend/` is retained as the original minimal client; it is not the published export.
 
 Use Node **22.18+** (Node 24 recommended) and npm. From the repository root:
 
@@ -28,11 +28,9 @@ For browser interaction checks, from `web/`:
 ```sh
 npx playwright install chromium
 npm run test:browser
-# Optional additional read-only check against the configured real RPC:
-CHECK_LIVE_RPC=1 npm run test:browser
 ```
 
-The browser test serves the finished export at `/preview/` inside its own bounded process, mocks RPC/wallet interactions by default, checks calldata and resulting UI state, and writes disposable results to `test/scratch/`. It sends no transactions and uses no signing key. The optional live check reads state only. Browsers are installed in Playwright's normal external cache, never vendored into the site.
+The browser test serves the finished export at `/preview/` inside its own bounded process, mocks RPC and wallet interactions, checks calldata and resulting UI state, and writes disposable results to `test/scratch/` (or `SHOTS_DIR`). It sends no transactions and uses no signing key. Browsers are installed in Playwright's normal external cache, never vendored into the site.
 
 ## Live deployment and first interaction
 
@@ -40,26 +38,33 @@ The site uses the existing **Sepolia** deployment, chain ID **11155111**, at **`
 
 `web/src/predictAbi.ts` and `coreAbi.ts` were derived from Solidity 0.8.26 at source commit `841002e57646285ae0bd5a31e9af3c08f4f4839d`. `npm run verify:deployment` in `web/` checks the pinned source digests, frontend ABI, canonical ABI hash and creation bytecode, and regenerates the expected runtime hash. The live browser read matched that runtime hash; see [the public chain observation](artifacts/chain-observation.json). The site verifies chain ID and deployed bytecode before displaying usable state and again before each transaction, then simulates the action and verifies the wallet account/network before asking for approval.
 
-1. Browse without a wallet. Open markets lead the list. Filter by status or 24-hour/7-day duration; search a block target or ID. Load older markets in batches of 20, or find a specific ID.
-2. Connect through the one wallet control: named EIP-6963 browser extensions, the wallet's own mobile browser, or Coinbase Smart Wallet. The phone picker links to MetaMask, Coinbase Wallet, Rabby, and Phantom. Switch to Sepolia when prompted.
-3. Choose **Bet yes** or **Bet no**, select a test ETH amount, and review the window, pools and estimated total payout. The minimum is `0.0001` test ETH; each side is capped at `100` test ETH. Estimates include an existing stake on the selected side and change with subsequent bets. Bets are final and can lose the stake.
-4. If no suitable market exists, choose **Create market** or a clearly labelled starting idea. Set a whole-number target, 24 hours or 7 days, and roughly 2, 6 or 24 hours of betting. Creating costs gas and does not place a bet. Exact dates align to ten-minute Core rounds and are fixed on-chain.
-5. After the window, anyone can **Resolve market** once SqueekCore has certified the endpoint. Anyone can **Open refunds** for an unmatched market after betting closes, or for an unresolved market after its 30-day grace. These actions cost gas; there is no automatic keeper.
-6. Open **My positions**. Claimable positions lead the list. Claim winnings or refunds to your connected wallet, or edit the receiving address. Exact stakes and claim amounts remain readable in market details. Confirmation links open Etherscan.
+### Using the site
 
-Pools, positions and Core data are RPC snapshots from one Ethereum block, refreshed every 30 seconds and manually with **Refresh**. A failed refresh explicitly marks the last read as stale and disables submissions until a successful read. Core outages do not prevent listing markets, betting, or oracle-independent refund/claim calls. Account changes close any existing transaction form and load that account's own positions. Totals and empty positions refer to the currently loaded markets, not an invisible all-chain portfolio.
+The site is a dark, sportsbook-style board. Every market is shown as an **over/under line**: the contract's question "more than T blocks?" is displayed as **Over T.5** (YES) and **Under T.5** (NO), so exactly T blocks settles as Under. A line of 0 is shown as **Runs / Rests** ("will the hamster run at all?").
 
-At the checked block there were **zero markets**, so the real site showed an empty state and creation options. It does not seed fake markets, odds, pools, positions or wheel activity. The three editable starting ideas are 1,000 daily blocks, 2,000 daily blocks, and 10,000 weekly blocks; they are not active bets. Squeek blocks measure certified work, not a one-to-one count of physical wheel revolutions. Only test ETH is appropriate for this community MVP.
+1. **Browse without a wallet.** Each market card shows its type (Daily total, Weekly total, Activity, Record attempt), status, countdown to close, and two odds buttons. Odds are pool-based multipliers: total pool / that side's pool, as the contract pays it, with no fee. A side nobody has backed yet reads **Open**. Filter by status (All, Open, In play, Settled), window length, market type, search a line or `#id`, and sort by closing soon, biggest pool or newest.
+2. **Wheel form.** The side panel (below the board on phones, linked from the live status card at the top) reads certified SqueekCore history: blocks per 10-minute round over the last certified 24 hours, totals for the last 1h / 3h / 6h / 12h / 24h / 7 days, the longest continuous run and active rounds in 24h, the best rolling 24h of the week ("personal record"), the daily average, and a night / morning / afternoon / evening comparison in the visitor's local time. The status card says whether the wheel was running in the last certified hour and how far certification lags real time (about 8 days when this was built).
+3. **Connect** through the one wallet control: named EIP-6963 browser extensions, the wallet's own mobile browser (MetaMask, Coinbase Wallet, Rabby, Phantom), or Coinbase Smart Wallet. Switch to Sepolia when prompted.
+4. **Bet slip.** Tapping an odds button opens the bet slip (a bottom sheet on phones) with that side selected: pools, window dates, side picker with live odds, stake with quick amounts, and the estimated payout. Minimum `0.0001` test ETH, each side capped at `100` test ETH. Bets are final.
+5. **Create a market.** Use **Create market** or a market idea under **Start a market**. Ideas are computed from the last 7 certified days: a daily line near the average, a wake-up call (line 0), a record attempt at the week's best 24h, a night shift starting at 18:00, a weekly line, and a custom window. Pick 24 hours or 7 days, adjust the line with the stepper, and choose when the window starts: in about 1 hour, in 6 hours, next 06:00, next 18:00, or any date and time you pick (65 minutes to 7 days ahead; it snaps to the next 10-minute Squeek round). Creating costs gas and does not place a bet.
+6. **Resolve and refunds.** After the window, anyone can resolve once SqueekCore has certified the endpoint, or open refunds for an unmatched market after betting closes, or for an unresolved market after its 30-day grace.
+7. **My bets.** Shows what you have staked and what is ready to claim, with a one-tap **Claim** for every claimable market (paid to the connected wallet). Open a market to send a payout to another address.
+
+Pools, positions and Core state are read from one Ethereum block and refresh every 30 seconds or with the refresh button. A failed refresh marks the last read as stale and disables submissions until a successful read. Wheel stats are read with batched JSON-RPC `roundPage(r, r, 0)` point queries (about 290 per load) and cached for five minutes.
+
+**What the contract can and cannot settle.** The deployed SqueekPredict contract only settles "more than T completed blocks over a 24-hour or 7-day window". This job did not deploy anything, so markets on 1h / 3h / 6h / 12h windows, longest runs, or daypart comparisons are shown as **Wheel form stats, not bets**. Record attempts, activity checks and custom start times are real markets because they map onto the contract's 24h/7d rule. Adding the other market types needs a new contract version.
+
+At the time of the final check there were **zero markets** on-chain, so the live site shows an empty board with the market ideas. It does not seed fake markets, odds, pools or positions; the wheel stats are real certified data. Squeek blocks measure certified work, not a one-to-one count of wheel revolutions. Use test ETH only.
 
 ## Frontend validation
 
-Actual results and the six-domain Better Interface review are recorded in [artifacts/validation.md](artifacts/validation.md); the final implemented design system is in [DESIGN.md](DESIGN.md).
+Actual results and the six-domain Better Interface review are in [artifacts/validation.md](artifacts/validation.md); the implemented design system is in [DESIGN.md](DESIGN.md).
 
-- Production build and TypeScript typecheck passed. The build has one advisory: the main minified JavaScript chunk is above Vite's 500 kB warning threshold.
-- Six model tests passed, covering wei precision, bounds, round alignment, estimated payouts, lifecycle boundaries, and tiny positive amounts.
-- Fourteen Chromium scenarios passed with the optional read-only live check enabled. Transaction cases use test-only mock providers and assert the exact contract, arguments and payable value.
-- The pinned taste probe passed **16/16** checks on the production export, including 320/390/1440 reflow, rendered text contrast, metadata and reduced motion. Additional checks covered the creation dialog, keyboard/focus, RTL reflow and 200% text enlargement. Automated accessibility scans of the market grid and creation dialog found no violations in the tested rule set.
-- WebKit could not open a page on the available runtime (EGL display creation failed). Safari, physical phones, native browser zoom, assistive-technology sessions, app handoff, passkey onboarding and actual wallet signatures remain unverified. No real transaction was sent. Automated checks are not an independent audit.
+- `npm run build` (Vite 7) and `npm run typecheck` (`tsc --noEmit`) passed. Advisory: the main JavaScript chunk is above Vite's 500 kB warning (wallet libraries).
+- `npm test`: 8 model tests passed (stake bounds, line/odds/kind mapping, round snapping of custom starts, lead-window limits, payouts, lifecycle).
+- `npm run test:browser`: 10/10 Chromium scenarios passed against the production export with mocked RPC and a mocked EIP-6963 wallet: render with odds and wheel stats and no page errors; status/length/type/search filters; connect then bet Under from an odds button (exact `bet(1,false)` calldata and value); invalid stake error; create from an idea with a custom start (round snapping asserted); a too-early start refused before the wallet; one-tap claim and resolve; 390 and 320 layouts with the main action above the fold, no horizontal scroll, and an axe WCAG 2.2 AA scan with no violations; the phone wallet sheet; RPC outage and retry.
+- The pinned design probe (`taste.mjs`) passed **16/16** on the export against live Sepolia data.
+- Not verified: Safari/WebKit, physical phones, native browser zoom, screen-reader sessions, and real wallet signatures. No transaction was sent.
 
 ## Contract development
 

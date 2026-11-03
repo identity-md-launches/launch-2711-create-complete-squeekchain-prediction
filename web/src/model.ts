@@ -73,3 +73,40 @@ export function friendlyError(error: unknown) {
   if (/fetch|HTTP|network|timeout|403|429|RPC|Failed to|could not be found/i.test(text)) return 'Unable to reach Sepolia. Check your connection and retry.';
   return 'The transaction could not complete. Refresh the market and try again.';
 }
+
+/* Sportsbook presentation of the contract's rule. "More than T blocks" is Over T.5; exactly T is Under. */
+export type Kind = 'Activity' | 'Daily total' | 'Weekly total' | 'Record attempt';
+export const KINDS: Kind[] = ['Daily total', 'Weekly total', 'Activity', 'Record attempt'];
+export function kind(m: Pick<Market, 'threshold' | 'startsAt' | 'endsAt'>, best24?: number): Kind {
+  if (m.endsAt - m.startsAt !== BigInt(DAY)) return 'Weekly total';
+  if (m.threshold === 0n) return 'Activity';
+  if (best24 !== undefined && best24 > 0 && m.threshold >= BigInt(best24)) return 'Record attempt';
+  return 'Daily total';
+}
+export const line = (threshold: bigint) => `${threshold.toLocaleString()}.5`;
+export function title(m: Pick<Market, 'threshold' | 'startsAt' | 'endsAt'>, best24?: number) {
+  const k = kind(m, best24);
+  if (k === 'Activity') return 'Will the hamster run in this 24-hour window?';
+  if (k === 'Record attempt') return `Record attempt: over ${line(m.threshold)} blocks in 24 hours`;
+  return `Squeek blocks in ${durationName(m)}: over or under ${line(m.threshold)}`;
+}
+export const sideName = (m: Pick<Market, 'threshold'>, yes: boolean) => m.threshold === 0n ? (yes ? 'Runs' : 'Rests') : `${yes ? 'Over' : 'Under'} ${line(m.threshold)}`;
+/** Current pari-mutuel multiplier for a side: total pool divided by that side's pool. */
+export function odds(m: Pick<Market, 'yesPool' | 'noPool'>, yes: boolean): number | null {
+  const side = yes ? m.yesPool : m.noPool;
+  const total = m.yesPool + m.noPool;
+  if (side === 0n || total === side) return null;
+  return Number(total * 1000n / side) / 1000;
+}
+export const formatOdds = (value: number | null) => value === null ? 'Open' : `${value.toFixed(2)}x`;
+/** First round whose start is at or after `timestamp`. */
+export function roundAt(genesis: bigint, timestamp: bigint) {
+  if (genesis <= 0n || timestamp < genesis) throw new Error('Unable to calculate the window. Refresh chain data and retry.');
+  return (timestamp - genesis + 599n) / 600n + 1n;
+}
+export const roundStart = (genesis: bigint, round: bigint) => genesis + (round - 1n) * 600n;
+/** Checks a chosen start against the contract's 1 hour to 7 day lead, keeping a 5 minute margin for confirmation. */
+export function checkStart(startsAt: bigint, now: bigint) {
+  if (startsAt < now + 3600n + 300n) throw new Error('Pick a start at least 65 minutes from now so the transaction can confirm in time.');
+  if (startsAt > now + 604800n - 300n) throw new Error('Pick a start within the next 7 days.');
+}
