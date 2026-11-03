@@ -81,6 +81,17 @@ export async function readWheelStats(core: Address, settledRound: bigint, genesi
   return computeStats(settled, Number(genesis), heights);
 }
 
+/** Whole-block heights at certified round endpoints. Rounds that fail or are not certified are left out. */
+export async function readRoundHeights(core: Address, rounds: number[]): Promise<Map<number, number>> {
+  const heights = new Map<number, number>();
+  const unique = [...new Set(rounds)].filter(r => r >= 0);
+  const results = await Promise.allSettled(unique.map(r => batched.readContract({ address: core, abi: coreAbi, functionName: 'roundPage', args: [BigInt(r), BigInt(r), 0n] })));
+  results.forEach((res, i) => {
+    if (res.status === 'fulfilled' && res.value.certifiedThroughRound === BigInt(unique[i])) heights.set(unique[i], Number(res.value.end.cumulativeBlockUnits / UNITS));
+  });
+  return heights;
+}
+
 export async function readPastWeeks(core: Address, settledRound: bigint, genesis: bigint): Promise<PastWeeks> {
   const settled = Number(settledRound);
   const rounds: number[] = [];

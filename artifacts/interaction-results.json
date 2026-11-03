@@ -4,6 +4,18 @@
     "passed": true
   },
   {
+    "name": "Homepage name, hero art, credits, founder previews and stats history",
+    "passed": true
+  },
+  {
+    "name": "Hamster markets: every family visible, categories, free calls persist and settle, on-chain lines bet",
+    "passed": true
+  },
+  {
+    "name": "No open markets suggests the next window",
+    "passed": true
+  },
+  {
     "name": "Filters: status, length, type, search and clear",
     "passed": true
   },

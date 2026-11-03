@@ -5,6 +5,9 @@ import { eth, phase, sideName, title, type Market } from './model';
 import { Icon } from './icons';
 import { PreviewHistory } from './CommunityMarkets';
 import type { Calls } from './previews';
+import type { HamsterCalls } from './hamster';
+import { parseWindowId, optionsFor } from './hamster';
+import { CALL_HISTORY_TITLES, windowLabel, type CallResult } from './HamsterMarkets';
 
 const day = (ts: number) => new Date(ts * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 const shortDate = (ts: bigint) => day(Number(ts));
@@ -19,9 +22,9 @@ function resultOf(m: Market, now: bigint, settled?: bigint) {
   return { text: p, tone: p === 'Refund available' ? 'muted' : 'warn' };
 }
 
-export function HistoryPanel({ data, failed, weeks, weeksError, weeksLoading, now, settled, best24, calls, onRetry, onOpen }: {
+export function HistoryPanel({ data, failed, weeks, weeksError, weeksLoading, now, settled, best24, calls, hamsterCalls, hamsterResults, hamsterLoading, onRetry, onOpen }: {
   data?: Snapshot; failed: boolean; weeks?: PastWeeks; weeksError: boolean; weeksLoading: boolean; now: bigint; settled?: bigint; best24?: number;
-  calls: Calls; onRetry: () => void; onOpen: (m: Market) => void;
+  calls: Calls; hamsterCalls: HamsterCalls; hamsterResults: CallResult[]; hamsterLoading: boolean; onRetry: () => void; onOpen: (m: Market) => void;
 }) {
   const [all, setAll] = useState(false);
   const markets = data?.markets ?? [];
@@ -88,6 +91,16 @@ export function HistoryPanel({ data, failed, weeks, weeksError, weeksLoading, no
             </li>; })}</ul>
             {ended.length > 8 && <button className="secondary" onClick={() => setAll(v => !v)}>{all ? 'Show fewer' : `Show all ${ended.length}`}</button>}
           </>}
+        <h3 className="panel-sub">Your hamster calls</h3>
+        {hamsterResults.length === 0 ? <p className="muted small">Free hamster calls appear here and are checked against certified SqueekCore blocks.</p>
+          : <ul className="history-list">{hamsterResults.map(r => {
+            const w = parseWindowId(r.id)!; const c = hamsterCalls[r.id]; const options = optionsFor(w.template, c?.line);
+            const won = r.outcome && r.outcome.winner === c?.pick;
+            return <li key={r.id}>
+              <span className="history-name"><strong>{CALL_HISTORY_TITLES[w.template.key]}</strong><span className="muted small">{windowLabel(w.template, w.start, w.end)} · your call {options[c?.pick ?? 0]}</span></span>
+              <span className={`history-result ${r.status === 'settled' ? won ? 'gain' : 'loss' : 'muted'}`}>{r.status === 'settled' ? <>{won && <Icon name="check" size={16}/>}{won ? 'Right' : 'Missed'} · {r.outcome!.detail}</> : r.status === 'running' ? 'Window not finished' : r.status === 'certifying' ? 'Awaiting certification' : hamsterLoading ? 'Checking…' : 'Couldn’t check yet'}</span>
+            </li>;
+          })}</ul>}
         <h3 className="panel-sub">Your founder calls</h3>
         <PreviewHistory now={Number(now)} calls={calls}/>
       </div>

@@ -19,7 +19,7 @@ const CORE = '0x74665dAecA35A2303e767E76a2FF1FB6F93e119f';
 const ACCOUNT = '0x1234567890123456789012345678901234567890'; // Test-only, never sent to a real chain.
 const HASH = `0x${'12'.repeat(32)}`;
 const now = BigInt(Math.floor(Date.now() / 1000));
-const genesis = now - 30n * 86400n;
+const genesis = now - 30n * 86400n - now % 600n; // on the 10-minute grid, like the live SqueekCore genesis
 const empty = { yes: 0n, no: 0n, claimed: false, claimable: 0n };
 const base = { threshold: 1000n, startRound: 4300n, endRound: 4443n, startsAt: now + 7200n, endsAt: now + 7200n + 86400n, refundAt: now + 7200n + 31n*86400n, genesisTimestamp: genesis, streamId: `0x${'11'.repeat(32)}`, implementation: CORE, status: 0, yesWins: false, startBlockUnits: 0n, endBlockUnits: 0n, yesPool: parseEther('0.012'), noPool: parseEther('0.008'), remainingWinningStake: 0n, remainingPayout: 0n };
 let markets;
@@ -192,6 +192,44 @@ try {
     assert.ok(await page.locator('article.market-card').count()>0, 'Stats anchor keeps the markets view');
     await noOverflow(page); assert.deepEqual(errors, []); await context.close();
   });
+  await test('Hamster markets: every family visible, categories, free calls persist and settle, on-chain lines bet', async () => {
+    resetFixtures();
+    // A saved 1-hour call for a window that ended two hours ago: 6 rounds x 3 blocks = 18 blocks, line 10, call Over.
+    const hourStart = Number(now) - Number(now) % 3600 - 3 * 3600;
+    const {page,context}=await fixturePage(); const errors=[]; page.on('pageerror',e=>errors.push(e.message));
+    await page.evaluate(id=>localStorage.setItem('squeek-predict-hamster-calls-v1', JSON.stringify({[id]:{pick:0,line:10}})), `blocks1h:${hourStart}`);
+    await page.reload(); await page.locator('article.market-card').first().waitFor({timeout:20000});
+    const hamster=page.locator('#hamster');
+    assert.equal(await hamster.getByRole('heading',{level:2}).innerText(), 'Hamster markets');
+    for (const name of ['Block counts','Longest runs','Activity windows']) await hamster.getByRole('heading',{name}).waitFor();
+    for (const text of ['Squeek blocks in the next hour','Squeek blocks in the next 6 hours','Longest block streak tomorrow','Rounds with blocks tomorrow','Busiest part of tomorrow','Will the hamster complete a block next hour?']) assert.equal(await hamster.locator('.call-card').filter({hasText:text}).count(), 1, text);
+    assert.equal(await hamster.locator('.chain-card').count(), 5);
+    assert.equal(await page.locator('.preview-card').count(), 4, 'founder markets stay alongside');
+    // Free 1-hour call: line from the 7-day average (432 a day -> 18 an hour -> 20).
+    const hour=hamster.locator('.call-card').filter({hasText:'Squeek blocks in the next hour'});
+    await hour.getByRole('button',{name:'Over 20.5'}).click();
+    assert.equal(await hour.getByRole('button',{name:/Over 20\.5/}).getAttribute('aria-pressed'),'true');
+    await hamster.locator('.call-card').filter({hasText:'Longest block streak'}).getByRole('button',{name:'3 to 6 hours'}).click();
+    await page.reload(); await page.locator('article.market-card').first().waitFor({timeout:20000});
+    assert.equal(await page.locator('#hamster .call-card').filter({hasText:'Squeek blocks in the next hour'}).getByRole('button',{name:/Over 20\.5/}).getAttribute('aria-pressed'),'true');
+    // Settled call shows under Stats with the certified count.
+    const calls=page.locator('#history .history-list').filter({hasText:'Blocks in one hour'});
+    await calls.getByText(/Right · 18 blocks/).waitFor({timeout:20000});
+    assert.match(await calls.innerText(), /Window not finished/);
+    // On-chain lines: the 24-hour card shows the open market's odds and opens the bet slip.
+    const daily=hamster.locator('.chain-card').filter({hasText:'in 24 hours'}).first();
+    await daily.locator('.odds-yes').click();
+    await page.getByRole('dialog',{name:'Bet slip'}).waitFor(); await page.keyboard.press('Escape');
+    // Categories filter the catalog; Founder & NFT hides hamster cards.
+    await page.getByRole('button',{name:'Longest runs',exact:true}).click();
+    assert.equal(await hamster.locator('.hamster-card').count(), 2);
+    await page.getByRole('button',{name:'Founder & NFT',exact:true}).click();
+    assert.equal(await page.locator('#hamster').count(), 0); assert.equal(await page.locator('.preview-card').count(), 4);
+    await page.getByRole('button',{name:'All markets',exact:true}).click();
+    assert.equal(await hamster.locator('.hamster-card').count(), 11);
+    assert.equal(transactions.length,0, 'free calls never touch the wallet');
+    await noOverflow(page); assert.deepEqual(errors, []); await context.close();
+  });
   await test('No open markets suggests the next window', async () => {
     resetFixtures(); for (const id of Object.keys(markets)) if (markets[id].startsAt > now) markets[id] = { ...markets[id], startsAt: now-3600n, endsAt: now+82800n };
     const {page,context}=await fixturePage();
@@ -237,7 +275,7 @@ try {
   await test('Create market from an idea with a custom start time', async () => {
     resetFixtures(); const {page,context}=await fixturePage();
     await page.getByRole('button',{name:'Connect wallet'}).click(); await page.getByRole('button',{name:/Test Browser Wallet/}).click();
-    await page.getByRole('button',{name:/Record attempt/}).click();
+    await page.locator('.chain-card').filter({hasText:'Will the hamster complete a block in the next 24 hours?'}).getByRole('button',{name:'Open this market'}).click();
     const d=page.getByRole('dialog',{name:'Create a market'}); await d.waitFor();
     await d.getByRole('button',{name:'Raise the line by 10'}).click();
     await d.getByText('Pick a time').click();
@@ -382,9 +420,12 @@ try {
     await card.locator('.odds-no').click(); const slip=page.getByRole('dialog',{name:'Bet slip'});
     assert.ok(await slip.getByRole('radio',{name:/No blocks/}).isChecked()); await assertNoScroll(slip);
     await page.keyboard.press('Escape');
-    await page.getByRole('button',{name:/Wake-up call/}).click();
+    // The hamster catalog's 24-hour wake-up line lists open market #1 with block-completion sides.
+    const wake=page.locator('.chain-card').filter({hasText:'Market #1'}).filter({hasText:'at least one block in 24 hours'});
+    assert.deepEqual(await wake.locator('.odds-side').allTextContents(),['At least one block','No blocks']);
+    await page.getByRole('button',{name:'Set your own line'}).click();
     const create=page.getByRole('dialog',{name:'Create a market'});
-    assert.equal(await create.getByLabel('Line: more than this many Squeek blocks').inputValue(),'0');
+    await create.getByLabel('Line: more than this many Squeek blocks').fill('0');
     assert.match(await create.locator('#line-help').innerText(),/At least one block or No blocks/);
     await page.keyboard.press('Escape');
     await page.locator('.wheel-panel').screenshot({path:`${shots}/partial-block-stats.png`});

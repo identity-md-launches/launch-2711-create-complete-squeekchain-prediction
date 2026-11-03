@@ -17,10 +17,14 @@ import { WheelPanel, WheelPulse } from './WheelPanel';
 import { usePastWeeks, useWheelStats } from './useStats';
 import { CommunityMarkets, useCalls } from './CommunityMarkets';
 import { HistoryPanel } from './HistoryPanel';
+import { HamsterMarkets, useHamsterCalls, useHamsterResults } from './HamsterMarkets';
+import { GROUPS, type Group } from './hamster';
 
 const HERO_IMAGE = './hamster-neon-wheel.svg';
 const CREDITS = ['squeektoshi', 'pillheadddd', 'le_chien65760'];
-const anchors = ['#wheel', '#history', '#community'];
+const anchors = ['#wheel', '#history', '#community', '#hamster', '#live', '#board'];
+type Category = Group | 'all' | 'founder';
+const CATEGORIES: [Category, string][] = [['all', 'All markets'], ...GROUPS.map(g => [g.id, g.label] as [Category, string]), ['founder', 'Founder & NFT']];
 
 type Tab = 'markets' | 'positions';
 type IconName = Parameters<typeof Icon>[0]['name'];
@@ -55,10 +59,15 @@ export default function App() {
   const best24 = stats?.best24;
   const weeksQuery = usePastWeeks(data);
   const { calls, choose } = useCalls();
+  const hamster = useHamsterCalls();
+  const [category, setCategory] = useState<Category>('all');
   const now = data ? data.timestamp + BigInt(Math.max(0, Math.floor((tick - data.fetchedAt) / 1000))) : BigInt(Math.floor(tick / 1000));
   const ready = Boolean(data && !query.isError);
   const busy = ['checking', 'wallet', 'pending'].includes(tx.stage);
   const settled = data?.coreState?.settledThroughRound;
+  const hamsterResults = useHamsterResults(hamster.calls, data?.coreAddress, data?.coreConfig?.genesisTimestamp, settled, Number(now));
+  const launchAverage = data?.coreState && data.coreConfig && now > data.coreConfig.genesisTimestamp ? Math.round(Number(data.coreState.blockHeight) * 86400 / Number(now - data.coreConfig.genesisTimestamp)) : undefined;
+  const dailyAverage = stats?.average24 ?? launchAverage;
   useEffect(() => { const timer = setInterval(() => setTick(Date.now()), 1000); return () => clearInterval(timer); }, []);
   useEffect(() => {
     const onHash = () => { if (anchors.includes(location.hash)) return; setTab(tabFromHash()); setFilter('all'); };
@@ -68,7 +77,7 @@ export default function App() {
   useEffect(() => { setSelected(undefined); setCreation(undefined); }, [address]);
 
   const templates = useMemo(() => {
-    const avg = stats?.average24 ?? 1000;
+    const avg = dailyAverage ?? 1000;
     const best = stats?.best24 ?? 2000;
     const week = stats?.total7d ?? 7000;
     const list: (Preset & { name: string; note: string; icon: IconName })[] = [
@@ -80,7 +89,7 @@ export default function App() {
       { name: 'Custom window', note: 'Your own line and start time', threshold: String(round10(avg)), duration: DAY, start: 'custom', icon: 'plus' },
     ];
     return list;
-  }, [stats]);
+  }, [stats, dailyAverage]);
 
   function resetTx() { if (!lock.current) setTx(idleTx); }
   function openMarket(m: Market, yes?: boolean) { resetTx(); setSelected({ id: m.id, yes }); }
@@ -194,8 +203,14 @@ export default function App() {
 
       <div className="layout">
         <div className="board" id="board" tabIndex={-1}>
-          <div className="board-head">
-            <div><h2>{tab === 'markets' ? 'Markets' : 'My bets'}</h2><p className="muted small">{tab === 'markets' ? data ? `${openCount} open · ${eth(totalPool)} ETH in pools` : 'Reading SqueekPredict on Sepolia' : 'Your stakes, results and payouts'}</p></div>
+          {tab === 'markets' && <>
+            <div className="chip-row category-row" role="group" aria-label="Market category">{CATEGORIES.map(([value, label]) => <button key={value} className={category === value ? 'chip active' : 'chip'} aria-pressed={category === value} onClick={() => setCategory(value)}>{label}</button>)}</div>
+            {category !== 'founder' && <HamsterMarkets group={category} now={now} dailyAverage={dailyAverage} best24={best24} total7d={stats?.total7d} markets={markets} statusOf={statusOf} busy={busy} calls={hamster.calls} choose={hamster.choose} onBet={openMarket} onCreate={openCreate}/>}
+            {category !== 'founder' && <div className="custom-line"><p className="muted small">Want a different line or start time?</p><button className="secondary" onClick={() => openCreate(templates[5])} disabled={busy}><Icon name="plus" size={18}/>Set your own line</button></div>}
+            {(category === 'all' || category === 'founder') && <CommunityMarkets now={nowSeconds} calls={calls} choose={choose}/>}
+          </>}
+          <div className={`board-head ${tab === 'markets' ? 'live-head' : ''}`} id="live" tabIndex={-1}>
+            <div><h2>{tab === 'markets' ? 'All on-chain markets' : 'My bets'}</h2><p className="muted small">{tab === 'markets' ? data ? `${openCount} open · ${eth(totalPool)} ETH in pools` : 'Reading SqueekPredict on Sepolia' : 'Your stakes, results and payouts'}</p></div>
             <button className="icon-button refresh" onClick={() => { void query.refetch(); void statsQuery.refetch(); void weeksQuery.refetch(); }} disabled={query.isFetching} aria-label="Refresh markets"><Icon name="refresh" size={18} className={query.isFetching ? 'spin-once' : ''}/></button>
           </div>
 
@@ -220,7 +235,7 @@ export default function App() {
           </div>
 
           {tx.stage !== 'idle' && !selected && !creation && <TransactionNotice tx={tx}/>}
-          {tab === 'markets' && data && !query.isError && openCount === 0 && <div className="notice next-up" role="status"><Icon name="clock"/><div><strong>Every listed window has closed</strong><p className="small muted">Ended markets settle below. Open the next {nextLine.duration === DAY ? '24-hour' : '7-day'} window at Over {line(BigInt(nextLine.threshold))}.</p></div><button className="primary" onClick={() => openCreate(nextLine)} disabled={busy}>Open next market</button></div>}
+          {tab === 'markets' && data && !query.isError && markets.length > 0 && openCount === 0 && <div className="notice next-up" role="status"><Icon name="clock"/><div><strong>Every listed window has closed</strong><p className="small muted">Ended markets settle below. Open the next {nextLine.duration === DAY ? '24-hour' : '7-day'} window at Over {line(BigInt(nextLine.threshold))}.</p></div><button className="primary" onClick={() => openCreate(nextLine)} disabled={busy}>Open next market</button></div>}
           {query.isError && <div className="notice" role="status"><Icon name="info"/><div><strong>{query.error instanceof Error && query.error.message.includes('verification failed') ? 'Contract verification failed' : 'Couldn’t load fresh market data'}</strong><p className="small muted">{data ? 'Showing the last successful read.' : 'Sepolia is not answering right now.'} Retry, or explore market ideas below.</p></div><button className="secondary" onClick={() => void query.refetch()} disabled={query.isFetching}>{query.isFetching ? 'Retrying…' : 'Retry'}</button></div>}
 
           {tab === 'positions' && !address ? <section className="empty"><div className="empty-icon"><Icon name="ticket" size={28}/></div><h3>Your bets live here.</h3><p className="muted">Connect a wallet to see stakes, results and payouts.</p><button className="primary" onClick={() => setWalletOpen(true)}>Connect wallet<Icon name="arrow" size={18}/></button></section>
@@ -234,13 +249,6 @@ export default function App() {
 
           {data && data.count > BigInt(Math.min(limit, markets.length)) && <div className="load-more"><button className="secondary" onClick={() => setLimit(n => n + 30)} disabled={query.isFetching}>{query.isFetching ? 'Loading…' : 'Load older markets'}</button><span className="small muted">{Math.min(limit, markets.length)} of {String(data.count)} loaded</span></div>}
 
-          {tab === 'markets' && <CommunityMarkets now={nowSeconds} calls={calls} choose={choose}/>}
-
-          {tab === 'markets' && <section className="ideas" aria-labelledby="ideas-title">
-            <div className="ideas-head"><h2 id="ideas-title">Up next: start a market</h2><p className="muted small">{stats ? 'Lines suggested from the last 7 certified days.' : 'Suggested lines. Edit before creating.'}</p></div>
-            <div className="idea-grid">{templates.map(t => <button className="idea" key={t.name} onClick={() => openCreate(t)} disabled={busy}><span className="idea-icon"><Icon name={t.icon} size={22}/></span><span className="idea-text"><strong>{t.name}</strong><span className="muted small">{t.note}</span></span><Icon name="chevron" size={18}/></button>)}</div>
-          </section>}
-
           <details className="find-market"><summary>Find an older market by number</summary><form onSubmit={e => { e.preventDefault(); setLookupError(''); try { const id = thresholdValue(lookupText); if (id < 1n || data && id > data.count) throw new Error('Enter an existing market number, starting at 1.'); setLookup(id); setSearch(lookupText); location.hash = 'markets'; setTab('markets'); setFilter('all'); setDurationFilter('all'); setKindFilter('all'); } catch (error) { setLookupError((error as Error).message); } }}><label htmlFor="market-id" className="field-label">Market number</label><div className="find-controls"><input className="text-input" id="market-id" name="market-id" inputMode="numeric" value={lookupText} onChange={e => setLookupText(e.target.value)} placeholder="e.g. 1" aria-describedby="lookup-error" aria-invalid={Boolean(lookupError)}/><button type="submit" className="secondary">Find</button></div><p id="lookup-error" role="alert" className="inline-error">{lookupError}</p></form></details>
         </div>
 
@@ -250,7 +258,7 @@ export default function App() {
         </aside>
       </div>
 
-      <HistoryPanel data={data} failed={query.isError || weeksQuery.isError} weeks={weeksQuery.data} weeksError={weeksQuery.isError} weeksLoading={weeksQuery.isLoading || query.isPending} now={now} settled={settled} best24={best24} calls={calls} onRetry={() => void weeksQuery.refetch()} onOpen={m => openMarket(m)}/>
+      <HistoryPanel data={data} failed={query.isError || weeksQuery.isError} weeks={weeksQuery.data} weeksError={weeksQuery.isError} weeksLoading={weeksQuery.isLoading || query.isPending} now={now} settled={settled} best24={best24} calls={calls} hamsterCalls={hamster.calls} hamsterResults={hamsterResults.results} hamsterLoading={hamsterResults.loading} onRetry={() => void weeksQuery.refetch()} onOpen={m => openMarket(m)}/>
     </main>
 
     <footer className="site-footer"><div className="footer-inner">

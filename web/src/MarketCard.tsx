@@ -13,11 +13,11 @@ export function MarketCard({ market: m, position: p, now, settled, best24, onOpe
   const k = kind(m, best24);
   const completed = m.endBlockUnits / 1000000000n - m.startBlockUnits / 1000000000n;
   return <article className={`market-card tone-${phaseTone(status)}`}>
+    <h3><button className="question-button" onClick={() => onOpen(m)}>{title(m, best24)}</button></h3>
     <div className="card-top">
       <span className="tag"><Icon name={k === 'Activity' ? 'bolt' : k === 'Record attempt' ? 'trophy' : k === 'Weekly total' ? 'chart' : 'wheel'} size={15}/>{k}</span>
       <span className={`status status-${phaseTone(status)}`}><span className="status-dot"/>{status}</span>
     </div>
-    <h3><button className="question-button" onClick={() => onOpen(m)}>{title(m, best24)}</button></h3>
     <p className="market-time"><Icon name="clock" size={15}/>{open ? <>Closes in <span className="num">{timeLeft(m.startsAt, now).replace(' left', '')}</span></> : now < m.endsAt ? `Window ends ${date(m.endsAt)}` : `Window ended ${date(m.endsAt)}`}</p>
     {m.status === 1 ? <div className="resolved-result"><Icon name="check"/><span><strong>{sideName(m, m.yesWins)} won</strong> with <span className="num">{completed.toLocaleString()}</span> blocks</span></div>
       : <div className="odds-row">

@@ -1,3 +1,60 @@
+# Hamster markets restoration — 2026-11-03
+
+This job restores the hamster markets that had dropped off the board, and keeps the founder/NFT previews and the homepage work from the previous job. Earlier sections below are historical records.
+
+## What was wrong
+
+A read of the live contract at the start of this job showed `marketCount()` = **0** for `0x8bd658e58e94ab6a18a8b9d8c6108d1287facacf` on Sepolia. The previous build only listed hamster markets that already existed on-chain, plus a short "Up next" list of create buttons. With no on-chain markets, the founder/NFT preview cards were the only market cards on the page, so the hamster markets looked gone. The 1h/6h windows, longest runs and activity windows only appeared as Wheel form statistics.
+
+## What changed
+
+- `web/src/hamster.ts` (new, pure): an 11-market hamster catalog in three groups.
+  - **Block counts**: next hour, next 6 hours, 24-hour line, 7-day line, record attempt.
+  - **Longest runs**: longest block streak tomorrow, rounds with blocks tomorrow.
+  - **Activity windows**: block in the next hour (yes/no), busiest part of tomorrow, 24-hour wake-up line, night shift.
+  - Also in the file: UTC window maths, the round grid, settlement rules and browser storage.
+- `web/src/HamsterMarkets.tsx` (new): the catalog is always visible.
+  - **On-chain lines** (24h, 7d, wake-up, record, night shift) show any matching open SqueekPredict market with live odds. Tapping a side opens the existing bet slip. If no market is open for that line, **Open this market** opens the existing create dialog with the line already filled in.
+  - **Free calls** (1h, 6h, streak, active rounds, wake-up hour, busiest daypart) take no ETH, because the deployed contract cannot settle them. They lock when the window starts.
+  - Free calls are settled in the browser from certified SqueekCore `roundPage` heights once SqueekCore has certified the window. Only the endpoints those windows need are read (`readRoundHeights`, `web/src/history.ts`).
+- `web/src/App.tsx:207-210`: new category chips (All markets / Block counts / Longest runs / Activity windows / Founder & NFT), then the hamster catalog, **Set your own line**, and the founder/NFT previews. Below them, the full on-chain list keeps its filters, search, sort and the My bets tab. The old "Up next" idea buttons are now part of the catalog. The custom window is still available through **Set your own line**.
+- `web/src/HistoryPanel.tsx`: under Stats, "Your hamster calls" lists each saved free call as Right/Missed with the certified count. Other states are "Window not finished", "Awaiting certification" and "Couldn't check yet". "Your founder calls" is unchanged.
+- Unchanged: the homepage (Squeek Predict title, hamster-on-neon-wheel image, credits line), Wheel form, past weeks, all founder/NFT markets, the wallet, betting, creation, claims, resolution and contract verification.
+
+## Better Interface review (six domains) and findings
+
+| Domain | Coverage | Findings and fixes |
+| --- | --- | --- |
+| Accessibility | Category chips and call options are real buttons with `aria-pressed`. Groups have `role="group"` and labels. Sections have h2/h3 headings. The 390/320 axe WCAG 2.2 AA scan in the browser suite ran with the new catalog and reported 0 violations. | None open. |
+| Layout | The catalog uses `repeat(auto-fill, minmax(280px, 1fr))` and drops to one column on phones. The category chips scroll sideways on phones like the status chips. `noOverflow` checks at 1440 (new hamster test), 390 and 320 passed. | None open. |
+| Writing | Each card says whether it is "On-chain · test ETH" or "Free call · no ETH". Each has a "How it settles" disclosure. When SqueekCore data has not loaded, cards never show an invented line. | `HamsterMarkets.tsx:97`: chain cards showed a fallback line ("1,000.5") before data loaded. **Fixed**: they now show a generic title until the 7-day average is known. |
+| Typography | Uses the existing six-size scale. Card titles reuse `h3`/`--t-title`. No new sizes were added. | None. |
+| Colors | Existing tokens only. Free calls keep the dashed edge used by founder previews; on-chain lines use solid edges. The taste contrast check passed. | None. |
+| UI | Covered states: loading/unavailable (disabled options with a reason), saved call, cleared call, open on-chain market, no open market, settled/awaiting/unchecked history. | `HamsterMarkets.tsx:86-87`, `:127-128`, `MarketCard.tsx:16-17`: the taste probe flagged status pills placed above headings as eyebrows (5 at 1440px). **Fixed**: the heading now comes first, with type and status on the line below. `App.tsx:238`: with zero on-chain markets the board said "Every listed window has closed". **Fixed**: that notice now only shows when markets exist. |
+
+Rendered checks were run in headless Chromium (Playwright) against the production export. Not covered: screen-reader sessions, physical phones, native zoom, WebKit, and real wallet signatures.
+
+## Commands and actual results (this job)
+
+| Command (from `web/` unless noted) | Result |
+| --- | --- |
+| `npm ci` | Installed from the unchanged lockfile. |
+| `npx tsc --noEmit` (`npm run typecheck`) | Passed. |
+| `npm test` | **20/20** passed, including 7 new tests in `tests/hamster.test.mjs`. They cover catalog families, UTC windows, window ids, round-grid alignment with the live genesis, the strict over rule (exactly the line is under), and streak/active/daypart settlement with ties. |
+| `npm run build` | Passed (Vite 7). Main chunk about 683 kB minified / 208 kB gzip. The existing >500 kB advisory remains. |
+| `node web/tests/browser-check.mjs` (repo root) | **18/18** Chromium scenarios passed against `dist/` at `/preview/`, with mocked RPC and wallet. `npx playwright install` could not download its newer browser here, so a preload (in `test/scratch/`, not delivered) pointed `chromium.launch` at the cached Chromium 1247 headless shell. The new scenario checks all 11 hamster cards and 4 founder cards. It also checks that a free 1h call (Over 20.5) and a streak call survive a reload, and that a pre-seeded past-hour call settles as "Right · 18 blocks" from mocked certified heights. It then checks the 24h on-chain card opening the bet slip, the category filters, that no wallet transactions were sent, and that nothing overflows. [interaction-results.json](interaction-results.json) |
+| `node .imd/reads/skills/design-critic/scripts/taste.mjs --out test/scratch/taste` (repo root, `IMD_PLAYWRIGHT` set to the repo's Playwright) | First run: 15/16, eyebrows failed (see above). After the fix: **16/16** at 320/390/1440. The sandboxed probe could not reach Sepolia, so it measured the RPC-unavailable state. [taste.json](taste.json) |
+| 390 screenshot review | The first screen shows the header, the "Squeek Predict" title, the hamster image, the lead line and **Bet on a market** / **Create market**, with the category chips and "Hamster markets" just below. |
+
+Screenshots updated: `screenshots/fixture-1440.png`, `fixture-390.png`, `fixture-320.png`.
+
+Limitations:
+- Free calls are stored per browser and carry no stake.
+- Certification currently runs about 7–8 days behind real time (`settledThroughRound` 1973 when read this job), so free calls stay "Awaiting certification" for that long.
+- Real-ETH markets for 1h/6h, streak and daypart need a new contract version. This job deploys nothing.
+
+---
+
 # Revision validation — 2026-11-03
 
 This is the current review of the revised export. The original upgrade record below is historical; its counts, live observations and limitations are superseded by this section where they differ. All four reported defects reproduced before source changes and are fixed. Raw original measurements: [revision-reproduction.json](revision-reproduction.json).

@@ -411,3 +411,17 @@ legend, .field-label { display: block; margin-bottom: var(--s-2); font-weight: 6
 }
 .filters > *, .search-field, .search-field input { min-width: 0; }
 .search-field input { flex: 1; }
+
+/* Hamster market catalog: solid edges for on-chain lines, dashed for free calls. */
+.category-row { margin-bottom: var(--s-5); }
+.hamster { outline: none; }
+.hamster-group + .hamster-group { margin-top: var(--s-6); }
+.group-title { margin-bottom: var(--s-3); }
+.hamster-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--s-4); }
+.hamster-card { display: flex; flex-direction: column; gap: var(--s-3); min-width: 0; padding: var(--s-5); border-radius: var(--r-card); background: var(--surface); border: 1px solid var(--line); overflow-wrap: anywhere; }
+.hamster-card.call-card { border-style: dashed; border-color: var(--line-strong); }
+.hamster-card .card-top { flex-wrap: wrap; }
+.hamster-card .secondary.full { margin-top: auto; }
+.call-options.four .call { min-height: 48px; }
+.custom-line { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-3); margin-top: var(--s-5); padding: var(--s-4); border-radius: var(--r-card); background: var(--surface); border: 1px solid var(--line); }
+.live-head { margin-top: var(--s-12); outline: none; }
