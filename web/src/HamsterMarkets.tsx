@@ -94,7 +94,11 @@ function CallCard({ t, now, dailyAverage, calls, choose }: { t: CallTemplate; no
   </article>;
 }
 
-function chainPreset(t: ChainTemplate, avg: number, best: number, week: number, known: boolean): Preset & { title: string } {
+type ChainPreset = Preset & { title: string; unavailable?: boolean };
+
+/** Record lines need the observed weekly best; it is never estimated from an average. */
+function chainPreset(t: ChainTemplate, avg: number, best: number | undefined, week: number, known: boolean): ChainPreset {
+  if (t.line === 'record' && best === undefined) return { threshold: '', duration: t.duration, title: 'Record attempt: weekly best unavailable', unavailable: true };
   if (!known && t.line !== 'zero') {
     const span = t.duration === DAY ? '24 hours' : '7 days';
     const generic = { daily: `Squeek blocks in the next ${span}: over or under your line`, weekly: `Squeek blocks in the next ${span}: over or under your line`, record: 'Record attempt: beat this week’s best day', night: 'Night shift: blocks in 24 hours from 18:00' } as const;
@@ -103,7 +107,7 @@ function chainPreset(t: ChainTemplate, avg: number, best: number, week: number, 
   const r10 = (n: number) => Math.max(10, Math.round(n / 10) * 10);
   if (t.line === 'weekly') { const v = Math.max(50, Math.round(week / 50) * 50); return { threshold: String(v), duration: t.duration, title: `Squeek blocks in the next 7 days: over or under ${line(BigInt(v))}` }; }
   if (t.line === 'zero') return { threshold: '0', duration: t.duration, title: 'Will the hamster complete a block in the next 24 hours?' };
-  if (t.line === 'record') return { threshold: String(best), duration: t.duration, title: `Record attempt: beat this week’s best day of ${best.toLocaleString()} blocks` };
+  if (t.line === 'record' && best !== undefined) return { threshold: String(best), duration: t.duration, title: `Record attempt: beat this week’s best day of ${best.toLocaleString()} blocks` };
   if (t.line === 'night') { const v = r10(avg * 1.25); return { threshold: String(v), duration: t.duration, start: 'evening', title: `Night shift: over ${line(BigInt(v))} blocks in 24 hours from 18:00` }; }
   const v = r10(avg);
   return { threshold: String(v), duration: t.duration, title: `Squeek blocks in the next 24 hours: over or under ${line(BigInt(v))}` };
@@ -120,7 +124,7 @@ function matching(t: ChainTemplate, markets: Market[], statusOf: (m: Market) => 
   }).sort((a, b) => a.startsAt < b.startsAt ? -1 : a.startsAt > b.startsAt ? 1 : 0);
 }
 
-function ChainCard({ t, preset, open, now, busy, onBet, onCreate }: { t: ChainTemplate; preset: Preset & { title: string }; open: Market[]; now: bigint; busy: boolean; onBet: (m: Market, yes?: boolean) => void; onCreate: (p: Preset) => void }) {
+function ChainCard({ t, preset, open, now, busy, statsError, onBet, onCreate, onRetryStats }: { t: ChainTemplate; preset: ChainPreset; open: Market[]; now: bigint; busy: boolean; statsError: boolean; onBet: (m: Market, yes?: boolean) => void; onCreate: (p: Preset) => void; onRetryStats: () => void }) {
   const m = open[0];
   const icon: IconName = t.line === 'record' ? 'trophy' : t.line === 'night' ? 'moon' : t.line === 'zero' ? 'bolt' : t.line === 'weekly' ? 'chart' : 'wheel';
   return <article className="hamster-card chain-card">
@@ -134,25 +138,28 @@ function ChainCard({ t, preset, open, now, busy, onBet, onCreate }: { t: ChainTe
       </button>)}</div>
     </> : <>
       <p className="market-time"><Icon name="clock" size={15}/>{t.duration === DAY ? '24-hour' : '7-day'} window, settled by SqueekPredict</p>
-      <p className="muted small">Nobody has opened this line yet. Open it, then you and others can bet test ETH on either side.</p>
-      <button className="secondary full" onClick={() => onCreate(preset)} disabled={busy}><Icon name="plus" size={18}/>Open this market</button>
+      {preset.unavailable
+        ? <p className="muted small">{statsError ? 'Couldn’t read this week’s certified history, so the record line is unknown.' : 'The record line appears once this week’s certified history loads.'}</p>
+        : <p className="muted small">Nobody has opened this line yet. Open it, then you and others can bet test ETH on either side.</p>}
+      {preset.unavailable && statsError && <button className="secondary full" onClick={onRetryStats}>Retry wheel stats</button>}
+      <button className="secondary full" onClick={() => onCreate(preset)} disabled={busy || preset.unavailable}><Icon name="plus" size={18}/>Open this market</button>
     </>}
   </article>;
 }
 
-export function HamsterMarkets({ group, now, dailyAverage, best24, total7d, markets, statusOf, busy, calls, choose, onBet, onCreate }: {
-  group: Group | 'all'; now: bigint; dailyAverage?: number; best24?: number; total7d?: number; markets: Market[]; statusOf: (m: Market) => Phase; busy: boolean;
-  calls: HamsterCalls; choose: (id: string, pick: number, line?: number) => void; onBet: (m: Market, yes?: boolean) => void; onCreate: (p: Preset) => void;
+export function HamsterMarkets({ group, now, dailyAverage, best24, total7d, statsError, markets, statusOf, busy, calls, choose, onBet, onCreate, onRetryStats }: {
+  group: Group | 'all'; now: bigint; dailyAverage?: number; best24?: number; total7d?: number; statsError: boolean; markets: Market[]; statusOf: (m: Market) => Phase; busy: boolean;
+  calls: HamsterCalls; choose: (id: string, pick: number, line?: number) => void; onBet: (m: Market, yes?: boolean) => void; onCreate: (p: Preset) => void; onRetryStats: () => void;
 }) {
   const avg = dailyAverage ?? 1000;
   const groups = GROUPS.filter(g => group === 'all' || g.id === group);
   return <section className="hamster" id="hamster" aria-labelledby="hamster-title" tabIndex={-1}>
-    <div className="ideas-head"><h2 id="hamster-title">Hamster markets</h2><p className="muted small">On-chain lines take test ETH. Free calls cover windows the contract cannot settle.</p></div>
+    <div className="ideas-head"><h2 id="hamster-title">Hamster markets</h2></div>
     {groups.map(g => <div className="hamster-group" key={g.id}>
       <h3 className="group-title">{g.label}</h3>
       <div className="hamster-grid">{HAMSTER_TEMPLATES.filter(t => t.group === g.id).map(t => t.mode === 'call'
         ? <CallCard key={t.key} t={t} now={Number(now)} dailyAverage={dailyAverage} calls={calls} choose={choose}/>
-        : <ChainCard key={t.key} t={t} preset={chainPreset(t, avg, best24 ?? Math.round(avg * 1.5), total7d ?? avg * 7, dailyAverage !== undefined)} open={matching(t, markets, statusOf, best24)} now={now} busy={busy} onBet={onBet} onCreate={onCreate}/>)}</div>
+        : <ChainCard key={t.key} t={t} preset={chainPreset(t, avg, best24, total7d ?? avg * 7, dailyAverage !== undefined)} open={matching(t, markets, statusOf, best24)} now={now} busy={busy} statsError={statsError} onBet={onBet} onCreate={onCreate} onRetryStats={onRetryStats}/>)}</div>
     </div>)}
   </section>;
 }

@@ -56,6 +56,14 @@
     "passed": true
   },
   {
+    "name": "First phone screen shows a complete hamster question and its answer buttons",
+    "passed": true
+  },
+  {
+    "name": "Record attempt stays unknown while weekly history is unavailable",
+    "passed": true
+  },
+  {
     "name": "Known pre-genesis history stays zero without masking missing certified endpoints",
     "passed": true
   },

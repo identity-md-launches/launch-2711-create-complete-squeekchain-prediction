@@ -4,8 +4,8 @@
    "name": "render",
    "passed": true,
    "exitCode": 0,
-   "durationMs": 10360,
-   "output": "renders, no script errors or missing local files\nexternal hosts: ethereum-sepolia-rpc.publicnode.com, rpc.sepolia.ethpandaops.io, sepolia.rpc.sentio.xyz"
+   "durationMs": 12306,
+   "output": "renders, no script errors or missing local files\nexternal hosts: ethereum-sepolia-rpc.publicnode.com"
   },
   {
    "name": "layout",
@@ -26,13 +26,13 @@
    "passed": true,
    "exitCode": 0,
    "durationMs": 0,
-   "output": "all measured text meets 4.5:1 (3:1 large)\n54 text boxes over images, video, canvas or gradients not measured"
+   "output": "all measured text meets 4.5:1 (3:1 large)\n58 text boxes over images, video, canvas or gradients not measured"
   },
   {
    "name": "casing",
    "passed": true,
    "exitCode": 0,
-   "durationMs": 1,
+   "durationMs": 0,
    "output": "no all-caps text in content"
   },
   {
@@ -46,28 +46,28 @@
    "name": "eyebrows",
    "passed": true,
    "exitCode": 0,
-   "durationMs": 2,
+   "durationMs": 3,
    "output": "no kicker labels above headings"
   },
   {
    "name": "type-sizes",
    "passed": true,
    "exitCode": 0,
-   "durationMs": 1,
-   "output": "390: 4 sizes in use, 5 with one-offs (13px×123, 16px×41, 18px×20, 22px×5, 30px×1)\n1440: 4 sizes in use, 5 with one-offs (13px×122, 16px×42, 18px×23, 22px×5, 44px×1)\nbar: 6 sizes used more than once, 8 counting one-offs, per width"
+   "durationMs": 0,
+   "output": "390: 4 sizes in use, 5 with one-offs (13px×179, 16px×38, 18px×27, 22px×11, 30px×1)\n1440: 4 sizes in use, 5 with one-offs (13px×175, 16px×41, 18px×30, 22px×11, 44px×1)\nbar: 6 sizes used more than once, 8 counting one-offs, per width"
   },
   {
    "name": "type-faces",
    "passed": true,
    "exitCode": 0,
-   "durationMs": 0,
+   "durationMs": 1,
    "output": "families (1): ui-sans-serif\nweights (3): 400, 600, 700"
   },
   {
    "name": "glyphs",
    "passed": true,
    "exitCode": 0,
-   "durationMs": 1,
+   "durationMs": 0,
    "output": "no em dashes or emoji in text"
   },
   {
@@ -75,21 +75,21 @@
    "passed": true,
    "exitCode": 0,
    "durationMs": 0,
-   "output": "no two-beat taglines"
+   "output": "1 two-beat lines; a stack is four or more, so keep the best and cut the rest:\n\"No markets yet. Open the first line.\" (#board > section.empty:nth-of-type(3) > h3)"
   },
   {
    "name": "repetition",
    "passed": true,
    "exitCode": 0,
-   "durationMs": 2,
+   "durationMs": 1,
    "output": "no repeated lines"
   },
   {
    "name": "copy-budget",
    "passed": true,
    "exitCode": 0,
-   "durationMs": 1,
-   "output": "prose on the first screen: 26 words at 390 (bar 60), 33 at 1440 (bar 90)\nall words on the first screen: 80 at 390, 179 at 1440\nwhole page: 909 words, 118 of them prose"
+   "durationMs": 0,
+   "output": "prose on the first screen: 28 words at 390 (bar 60), 32 at 1440 (bar 90)\nall words on the first screen: 93 at 390, 224 at 1440\nwhole page: 1125 words, 180 of them prose"
   },
   {
    "name": "chrome",
@@ -109,7 +109,7 @@
    "name": "share",
    "passed": true,
    "exitCode": 0,
-   "durationMs": 0,
+   "durationMs": 1,
    "output": "title \"Squeek Predict · Bet on the hamster’s wheel\", favicon, og:title, og:image, description"
   }
  ]

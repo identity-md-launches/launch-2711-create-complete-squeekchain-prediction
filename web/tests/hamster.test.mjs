@@ -69,3 +69,13 @@ test('lines scale with the daily average', () => {
   const hourly = HAMSTER_TEMPLATES.find(t => t.key === 'blocks1h');
   assert.deepEqual(optionsFor(hourly, 40), ['Over 40.5', 'Under 40.5']);
 });
+
+test('streak boundaries land in the bucket whose label includes them', async () => {
+  const { STREAK_OPTIONS } = await import('../src/hamster.ts');
+  const rounds = Array.from({ length: 145 }, (_, i) => i);
+  const at = cap => settle('streak', rounds, new Map(rounds.map(r => [r, Math.min(r, cap)])));
+  assert.equal(STREAK_OPTIONS[at(6).winner], '1 to under 3 hours', 'exactly 1h');
+  assert.equal(STREAK_OPTIONS[at(18).winner], '3 to under 6 hours', 'exactly 3h');
+  assert.equal(STREAK_OPTIONS[at(36).winner], '6 hours or more', 'exactly 6h');
+  assert.equal(STREAK_OPTIONS[at(5).winner], 'Under 1 hour', '50 minutes');
+});

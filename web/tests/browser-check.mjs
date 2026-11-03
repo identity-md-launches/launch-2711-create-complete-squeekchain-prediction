@@ -209,7 +209,7 @@ try {
     const hour=hamster.locator('.call-card').filter({hasText:'Squeek blocks in the next hour'});
     await hour.getByRole('button',{name:'Over 20.5'}).click();
     assert.equal(await hour.getByRole('button',{name:/Over 20\.5/}).getAttribute('aria-pressed'),'true');
-    await hamster.locator('.call-card').filter({hasText:'Longest block streak'}).getByRole('button',{name:'3 to 6 hours'}).click();
+    await hamster.locator('.call-card').filter({hasText:'Longest block streak'}).getByRole('button',{name:'3 to under 6 hours'}).click();
     await page.reload(); await page.locator('article.market-card').first().waitFor({timeout:20000});
     assert.equal(await page.locator('#hamster .call-card').filter({hasText:'Squeek blocks in the next hour'}).getByRole('button',{name:/Over 20\.5/}).getAttribute('aria-pressed'),'true');
     // Settled call shows under Stats with the certified count.
@@ -380,7 +380,7 @@ try {
     for (const mode of ['partial','interior','uncertified']) {
       resetFixtures(); historyMode=mode;
       const {page,context}=await fixturePage({width:390,height:844});
-      const retry=page.getByRole('button',{name:'Retry wheel stats'});
+      const retry=page.locator('#wheel').getByRole('button',{name:'Retry wheel stats'});
       await retry.waitFor({timeout:30000});
       assert.equal(await page.locator('.window-grid, .fact-list, .live-line').count(),0);
       assert.equal(await page.locator('.pulse strong').innerText(),'Wheel stats unavailable');
@@ -392,6 +392,40 @@ try {
       assert.equal(await page.getByRole('button',{name:'Retry wheel stats'}).count(),0);
       await context.close();
     }
+  });
+  await test('First phone screen shows a complete hamster question and its answer buttons', async () => {
+    resetFixtures();
+    for (const width of [390, 320]) {
+      const {page,context}=await fixturePage({width,height:844},true);
+      await page.locator('.window-grid dd').first().waitFor({timeout:20000});
+      await page.waitForTimeout(600);
+      const actions=await page.locator('.hero-actions > *').evaluateAll(els=>els.map(e=>Math.round(e.getBoundingClientRect().top)));
+      assert.equal(new Set(actions).size, 1, `hero actions share one row at ${width}`);
+      await assertTextFits(page.locator('.hero-actions > *'));
+      const first=page.locator('#hamster .hamster-card').first();
+      const box=await first.locator('.call-options').evaluate(el=>{const r=el.getBoundingClientRect();return {top:r.top,bottom:r.bottom};});
+      const title=await first.locator('h3').evaluate(el=>el.getBoundingClientRect().top);
+      console.log(`  ${width}: first answer row ${box.top.toFixed(1)}-${box.bottom.toFixed(1)}`);
+      if (width===390) { assert.ok(title>=0 && box.bottom<=844, `first hamster answer row ends at ${box.bottom}`); await page.screenshot({path:`${shots}/first-screen-390.png`}); }
+      await noOverflow(page); await context.close();
+    }
+  });
+  await test('Record attempt stays unknown while weekly history is unavailable', async () => {
+    resetFixtures(); historyMode='partial'; markets[1].threshold=100n; // no open line reaches the record
+    const {page,context}=await fixturePage({width:390,height:844});
+    await page.locator('#wheel').getByRole('button',{name:'Retry wheel stats'}).waitFor({timeout:30000});
+    const record=page.locator('.chain-card').filter({hasText:'Record attempt'});
+    assert.match(await record.locator('h3').innerText(), /^Record attempt: weekly best unavailable$/);
+    assert.ok(await record.getByRole('button',{name:'Open this market'}).isDisabled());
+    assert.ok(await record.getByRole('button',{name:'Retry wheel stats'}).isVisible());
+    // Other on-chain lines stay usable.
+    assert.ok(await page.locator('.chain-card').filter({hasText:'Will the hamster complete a block in the next 24 hours?'}).getByRole('button',{name:'Open this market'}).isEnabled());
+    historyMode='complete'; await record.getByRole('button',{name:'Retry wheel stats'}).click();
+    await record.getByRole('heading',{name:'Record attempt: beat this week’s best day of 432 blocks'}).waitFor({timeout:30000});
+    await record.getByRole('button',{name:'Open this market'}).click();
+    const d=page.getByRole('dialog',{name:'Create a market'}); await d.waitFor();
+    assert.equal(await d.getByLabel('Line: more than this many Squeek blocks').inputValue(), '432');
+    assert.equal(transactions.length,0); await context.close();
   });
   await test('Known pre-genesis history stays zero without masking missing certified endpoints', async () => {
     resetFixtures(); settledRound=180n;

@@ -205,7 +205,7 @@ export default function App() {
         <div className="board" id="board" tabIndex={-1}>
           {tab === 'markets' && <>
             <div className="chip-row category-row" role="group" aria-label="Market category">{CATEGORIES.map(([value, label]) => <button key={value} className={category === value ? 'chip active' : 'chip'} aria-pressed={category === value} onClick={() => setCategory(value)}>{label}</button>)}</div>
-            {category !== 'founder' && <HamsterMarkets group={category} now={now} dailyAverage={dailyAverage} best24={best24} total7d={stats?.total7d} markets={markets} statusOf={statusOf} busy={busy} calls={hamster.calls} choose={hamster.choose} onBet={openMarket} onCreate={openCreate}/>}
+            {category !== 'founder' && <HamsterMarkets group={category} now={now} dailyAverage={dailyAverage} best24={best24} total7d={stats?.total7d} statsError={statsQuery.isError} markets={markets} statusOf={statusOf} busy={busy} calls={hamster.calls} choose={hamster.choose} onBet={openMarket} onCreate={openCreate} onRetryStats={() => void statsQuery.refetch()}/>}
             {category !== 'founder' && <div className="custom-line"><p className="muted small">Want a different line or start time?</p><button className="secondary" onClick={() => openCreate(templates[5])} disabled={busy}><Icon name="plus" size={18}/>Set your own line</button></div>}
             {(category === 'all' || category === 'founder') && <CommunityMarkets now={nowSeconds} calls={calls} choose={choose}/>}
           </>}

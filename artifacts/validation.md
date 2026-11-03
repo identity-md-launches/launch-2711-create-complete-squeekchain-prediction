@@ -1,3 +1,37 @@
+# Revision: review findings on the restored hamster markets (2026-11-03)
+
+Three reported findings were reproduced against the committed export before any change, using new regression tests in `web/tests/browser-check.mjs` and `web/tests/hamster.test.mjs`. All three reproduced, and all three are fixed. Sections further down are earlier records.
+
+| Finding | Reproduction (before) | Fix | Check (after) |
+| --- | --- | --- | --- |
+| High, first phone screen hides hamster answers (`web/src/styles.css:370`) | Mocked fixture, mobile 390×844: the two hero actions sat on two rows (test "hero actions share one row" failed: 2 rows). | `styles.css:369-370`: inside `max-width:760px`, hero actions use `flex-wrap: nowrap`, 8px gap, `flex: 1`, `min-width: 0`, 13px (`--t-small`) labels, 12px side padding, and labels may wrap. `styles.css:399`: action icons are hidden at ≤380px so both labels fit at 320. `HamsterMarkets.tsx:157`: removed the repeated "On-chain lines take test ETH…" paragraph, since each card's tag already says this. Title, image and credits are unchanged. | Fixture 390×844: the first hamster question and its Over/Under row are on screen, answer row y 737.7–781.7. Live Sepolia probe screenshot (`screenshots/live-390.png`): the answer row ends at about y 824 of 844. At 320 the row starts at y 848, just below the fold; the "product and main action" check still passes there. No text escapes its button at 320 or 390. |
+| Medium, record market invents a best day (`HamsterMarkets.tsx:155`) | Fixture with `roundPage` failing: the record card read "beat this week’s best day of 654 blocks" (avg × 1.5). The fixture's real best day is 432. | `HamsterMarkets.tsx:97-101`: a record preset needs an observed `best24`; there is no estimate. Until `best24` is known, the card reads "Record attempt: weekly best unavailable" and **Open this market** is disabled. If the stats read failed, **Retry wheel stats** appears (`:141-145`; `App.tsx:208` passes `statsQuery.isError` and refetch). Other on-chain lines stay usable. | New test "Record attempt stays unknown…": unavailable title, disabled open button and a working retry. After retry the heading reads "best day of 432 blocks" and the create dialog opens with line 432. Wake-up line still enabled. |
+| Medium, overlapping range labels (`hamster.ts:36`, `previews.ts:23`) | `settle('streak')` with an exactly 3h run returns winner 2 ("3 to 6 hours"), so "1 to 3 hours" loses. Exactly 6h returns winner 3. | Labels only; order and settlement logic unchanged: "Under 1 hour", "1 to under 3 hours", "3 to under 6 hours", "6 hours or more"; NFT floor "Under 0.01 ETH", "0.01 to under 0.05 ETH", "0.05 to under 0.25 ETH", "0.25 ETH or more". Existing saved picks are stored by index, so they keep their meaning. | New unit test: exactly 1h, 3h and 6h, and 50 minutes, each settle to the bucket whose label includes them. |
+
+## Better Interface review for this change
+
+- **Layout**: fixed the first-screen finding above. No horizontal scroll at 320, 390 or 1440 (probe and browser suite).
+- **Writing**: range labels are now unambiguous. The unknown record states what is missing and how to recover.
+- **Accessibility**: the disabled record action is a native disabled button, and the retry is a real button. The axe WCAG 2.2 AA scan at 390 still reports no violations.
+- **Typography**: hero actions use an existing scale step (`--t-small`). The probe counts 5 sizes per width.
+- **Colors**: no new colors. The probe's contrast check passes.
+- **UI**: added an unavailable/error state for the record card. Saved-call, loading and settled states are unchanged.
+
+## Commands and results (final source)
+
+| Command | Result |
+| --- | --- |
+| `npm ci` (in `web/`) | installed from the unchanged lockfile |
+| `npm test` | 21/21 passed |
+| `npm run typecheck` | passed, no errors |
+| `npm run build` | passed. The existing advisory remains: main chunk 684 kB minified, over the 500 kB warning. Relative `./assets/` URLs. |
+| `npm run test:browser` (Chromium, mocked RPC and EIP-6963 wallet, production export) | 20/20 passed ([interaction-results.json](interaction-results.json)) |
+| `IMD_PLAYWRIGHT=web/node_modules/playwright/index.mjs node .imd/reads/skills/design-critic/scripts/taste.mjs --out test/scratch/taste` (repo root, live Sepolia reads) | 16/16 passed ([taste.json](taste.json)). Viewed the 390 screenshot: H1, image, both actions and the first hamster question with its answer buttons are on the first screen. |
+
+Limitations: no WebKit, physical phone, screen reader or real wallet signature. The 320px first screen shows the product and actions, but its first answer row starts just below the fold.
+
+---
+
 # Hamster markets restoration — 2026-11-03
 
 This job restores the hamster markets that had dropped off the board, and keeps the founder/NFT previews and the homepage work from the previous job. Earlier sections below are historical records.

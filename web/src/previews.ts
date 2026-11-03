@@ -20,7 +20,7 @@ export const PREVIEW_TEMPLATES: PreviewTemplate[] = [
   { key: 'tweets24', topic: 'Founder', window: 'day', question: 'How many posts will @pillheadddd publish on X today?', options: ['0 to 4', '5 to 14', '15 to 29', '30 or more'], resolution: 'Posts and quote posts on x.com/pillheadddd during this UTC day. Reposts and replies excluded.' },
   { key: 'tweets7d', topic: 'Founder', window: 'week', question: 'How many posts will @pillheadddd publish on X this week?', options: ['0 to 24', '25 to 74', '75 to 149', '150 or more'], resolution: 'Posts and quote posts on x.com/pillheadddd from Monday 00:00 to Sunday 24:00 UTC. Reposts and replies excluded.' },
   { key: 'nftMint', topic: 'Squeek NFTs', question: 'When will the Squeek NFTs be mintable?', options: ['Before December 2026', 'December 2026', 'January to March 2027', 'Later'], resolution: 'The first date a public mint is open, as announced by @squeekchain.' },
-  { key: 'nftFloor', topic: 'Squeek NFTs', question: 'What will the Squeek NFT floor price be one week after mint?', options: ['Under 0.01 ETH', '0.01 to 0.05 ETH', '0.05 to 0.25 ETH', '0.25 ETH or more'], resolution: 'Lowest listed price seven days after the public mint opens.' },
+  { key: 'nftFloor', topic: 'Squeek NFTs', question: 'What will the Squeek NFT floor price be one week after mint?', options: ['Under 0.01 ETH', '0.01 to under 0.05 ETH', '0.05 to under 0.25 ETH', '0.25 ETH or more'], resolution: 'Lowest listed price seven days after the public mint opens.' },
 ];
 
 const DAY = 86400;

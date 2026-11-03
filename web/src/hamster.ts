@@ -33,7 +33,7 @@ export type ChainTemplate = {
 export type HamsterTemplate = CallTemplate | ChainTemplate;
 
 export const DAYPARTS = ['Night 00–06', 'Morning 06–12', 'Afternoon 12–18', 'Evening 18–24'];
-export const STREAK_OPTIONS = ['Under 1 hour', '1 to 3 hours', '3 to 6 hours', '6 hours or more'];
+export const STREAK_OPTIONS = ['Under 1 hour', '1 to under 3 hours', '3 to under 6 hours', '6 hours or more'];
 export const ACTIVE_OPTIONS = ['0 to 35', '36 to 71', '72 to 107', '108 to 144'];
 
 export const HAMSTER_TEMPLATES: HamsterTemplate[] = [

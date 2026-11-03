@@ -60,14 +60,14 @@ The original upgrade check observed **zero markets** on-chain; an empty board sh
 
 The revision's results, reproductions and six-domain Better Interface review are in [artifacts/validation.md](artifacts/validation.md); the implemented design system is in [DESIGN.md](DESIGN.md).
 
-- Production build and `npm run typecheck` passed using the unchanged lockfile. The existing Vite advisory remains: the main wallet-containing JavaScript chunk is about 656 kB, above 500 kB.
-- `npm test`: **9/9** model tests passed, including both supported zero-threshold windows and the partial-block settlement boundary.
-- `npm run test:browser`: **15/15** Chromium scenarios passed against the production export at `/preview/`, with mocked RPC and EIP-6963 wallet requests. The suite covers filters, staking, creation, claims, resolution, wallet entry, outage/retry, full uint64 lines and dialog scroll bounds, connected/wrong-network headers across 16 widths, incomplete history and recovery, pre-genesis history, and block-completion wording. The 390px axe WCAG 2.2 AA scan reported no violations. No real transaction was sent.
-- The pinned `taste.mjs` probe passed **16/16** at 320, 390 and 1440px with `--offline`. This revision's probe measures the RPC-unavailable state; the populated states are covered separately by browser fixtures. Full results are in [artifacts/taste.json](artifacts/taste.json).
-- Screenshots confirm the product and Create market action on the first 390px screen. Long lines, both side choices, odds and the network-switch action fit without horizontal scrolling. The linked logo retains its accessible name when the brand text is hidden.
-- Not verified: WebKit (launch failed because required system libraries are absent), physical phones, native browser zoom, screen-reader sessions, and real wallet signatures. Live chain availability was not rechecked in this revision; the earlier observation is retained as historical evidence.
+- Production build and `npm run typecheck` passed using the unchanged lockfile. The existing Vite advisory remains: the main wallet-containing JavaScript chunk is about 684 kB, above 500 kB.
+- `npm test`: **21/21** model tests passed. They cover the hamster catalog, UTC windows, settlement, and the exact 1h/3h/6h streak boundaries against their labels.
+- `npm run test:browser`: **20/20** Chromium scenarios passed against the production export at `/preview/`, with mocked RPC and EIP-6963 wallet requests. They cover every hamster market family and the category chips; free calls persisting and settling; the first 390×844 screen showing a complete hamster question with its answer buttons; and the record line staying unavailable, with no estimated line, while weekly history cannot be read. Also covered: filters, staking, creation, claims, resolution, wallet entry, outage/retry, full uint64 lines, headers across 16 widths, and incomplete history. The 390px axe WCAG 2.2 AA scan reported no violations. No real transaction was sent.
+- The pinned `taste.mjs` probe passed **16/16** at 320, 390 and 1440px with live Sepolia reads. Full results are in [artifacts/taste.json](artifacts/taste.json).
+- Screenshots confirm the title, hamster image, both hero actions and the first hamster market's answer buttons on the first 390px screen. At 320px, the first answer row starts just below the fold.
+- Not verified: WebKit (launch failed because required system libraries are absent), physical phones, native browser zoom, screen-reader sessions, and real wallet signatures.
 
-Dependencies and browsers were installed in a disposable `/tmp` mirror to preserve the repository's build configuration and manifests. The copied production export is byte-identical to that build. No dependency directory, cache or registry archive is delivered.
+Dependencies were installed with `npm ci` from the committed lockfile into the git-ignored `web/node_modules`. No dependency directory, cache or registry archive is delivered.
 
 ## Contract development
 
