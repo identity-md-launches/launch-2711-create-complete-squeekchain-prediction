@@ -2,6 +2,8 @@ import { createPublicClient, fallback, http, type Address } from 'viem';
 import { chain } from './config';
 import { network } from './network';
 import { coreAbi } from './coreAbi';
+import { DAY_ROUNDS, computePastWeeks, type PastWeeks } from './weeks';
+export type { PastWeeks };
 
 /* Certified wheel history from SqueekCore. Every number is the difference between whole-block
  * heights at two certified round endpoints, the same rule SqueekPredict uses to resolve. */
@@ -77,4 +79,17 @@ export async function readWheelStats(core: Address, settledRound: bigint, genesi
   });
   if (heights.size !== rounds.length) throw new Error('Wheel history is incomplete. Retry in a moment.');
   return computeStats(settled, Number(genesis), heights);
+}
+
+export async function readPastWeeks(core: Address, settledRound: bigint, genesis: bigint): Promise<PastWeeks> {
+  const settled = Number(settledRound);
+  const rounds: number[] = [];
+  for (let d = 0; d <= 28; d++) if (settled - d * DAY_ROUNDS >= 0) rounds.push(settled - d * DAY_ROUNDS);
+  const heights = new Map<number, number>();
+  const results = await Promise.allSettled(rounds.map(r => batched.readContract({ address: core, abi: coreAbi, functionName: 'roundPage', args: [BigInt(r), BigInt(r), 0n] })));
+  results.forEach((res, i) => {
+    if (res.status === 'fulfilled' && res.value.certifiedThroughRound === BigInt(rounds[i])) heights.set(rounds[i], Number(res.value.end.cumulativeBlockUnits / UNITS));
+  });
+  if (heights.size !== rounds.length) throw new Error('Weekly history is incomplete. Retry in a moment.');
+  return computePastWeeks(settled, Number(genesis), heights);
 }

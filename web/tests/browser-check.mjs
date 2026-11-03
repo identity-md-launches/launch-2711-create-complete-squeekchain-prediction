@@ -132,8 +132,8 @@ async function fixturePage(viewport={width:1440,height:1000}, mobile=false) {
   await page.locator('article.market-card').first().waitFor({timeout:20000});
   return {page,context};
 }
-async function test(name,fn) {try{await fn();results.push({name,passed:true});console.log('PASS',name);}catch(e){results.push({name,passed:false,error:e.message});console.error('FAIL',name,e.stack);}}
-const noOverflow = async page => assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), 'page scrolls horizontally');
+async function test(name,fn) {if(process.env.ONLY && !name.includes(process.env.ONLY))return;try{await fn();results.push({name,passed:true});console.log('PASS',name);}catch(e){results.push({name,passed:false,error:e.message});console.error('FAIL',name,e.stack);}}
+const noOverflow = async page => { const wide = await page.evaluate(() => { const w = document.documentElement.clientWidth; if (document.documentElement.scrollWidth <= w) return null; return `scroll ${document.documentElement.scrollWidth}/${w}: ` + [...document.querySelectorAll("body *")].filter(el => el.getBoundingClientRect().right > w).slice(-3).map(el => `${el.tagName}.${el.className} ${Math.round(el.getBoundingClientRect().right)}/${w}`).join(', '); }); assert.equal(wide, null, `page scrolls horizontally: ${wide}`); };
 // Check scroll containers and the rendered text fragments, not just the document viewport.
 const assertNoScroll = async locator => assert.ok(await locator.evaluate(el=>el.scrollWidth<=el.clientWidth), 'container scrolls horizontally');
 const assertInViewport = async locator => assert.ok(await locator.evaluate(el=>{const r=el.getBoundingClientRect();return r.left>=0 && r.right<=document.documentElement.clientWidth;}), 'control is outside viewport');
@@ -162,6 +162,43 @@ try {
     assert.match(await first.innerText(), /Over 1,000\.5/);
     assert.match(await first.locator('.odds-yes .odds-price').innerText(), /^\d+\.\d\dx$/);
     await noOverflow(page); await page.screenshot({path:`${shots}/fixture-1440.png`}); assert.deepEqual(errors, []); await context.close();
+  });
+  await test('Homepage name, hero art, credits, founder previews and stats history', async () => {
+    resetFixtures(); const {page,context}=await fixturePage(); const errors=[]; page.on('pageerror',e=>errors.push(e.message));
+    assert.equal(await page.locator('h1').innerText(), 'Squeek Predict');
+    const art=page.locator('img.hero-art'); await art.waitFor();
+    assert.ok(await art.evaluate(img=>img.complete && img.naturalWidth>0), 'hero image loads');
+    assert.equal((await page.locator('.credits').textContent()).replace(/\s+/g,' ').trim(), 'Made by @squeektoshi @pillheadddd @le_chien65760 on @squeekchain');
+    // Stats and history: 3 blocks per round in the fixture, so 432 a day and 3,024 a week.
+    const history=page.locator('#history');
+    await history.locator('.week-table tbody tr').first().waitFor({timeout:20000});
+    assert.match(await history.locator('.week-table tbody tr').first().innerText(), /Latest 7 days\s+3,024/);
+    assert.equal(await history.locator('.week-table tbody tr').count(), 4);
+    assert.match(await history.locator('.overview').innerText(), /Markets created\s+6/);
+    const results=history.locator('.history-list').first();
+    assert.match(await results.innerText(), /Over 1,000\.5 won · 1,500 blocks/);
+    assert.match(await results.innerText(), /#6/);
+    assert.doesNotMatch(await results.innerText(), /#1 /, 'open markets are not history');
+    // Founder previews: free calls persist in this browser and never touch the wallet or chain.
+    const card=page.locator('.preview-card').filter({hasText:'today?'});
+    assert.equal(await page.locator('.preview-card').count(), 4);
+    await card.getByRole('button',{name:'5 to 14'}).click();
+    assert.equal(await card.getByRole('button',{name:'5 to 14'}).getAttribute('aria-pressed'),'true');
+    await page.reload(); await page.locator('article.market-card').first().waitFor({timeout:20000});
+    assert.equal(await page.locator('.preview-card').filter({hasText:'today?'}).getByRole('button',{name:'5 to 14'}).getAttribute('aria-pressed'),'true');
+    assert.equal(transactions.length,0);
+    await page.getByRole('link',{name:'Stats',exact:true}).first().click();
+    await page.waitForFunction(()=>location.hash==='#history');
+    assert.ok(await page.locator('article.market-card').count()>0, 'Stats anchor keeps the markets view');
+    await noOverflow(page); assert.deepEqual(errors, []); await context.close();
+  });
+  await test('No open markets suggests the next window', async () => {
+    resetFixtures(); for (const id of Object.keys(markets)) if (markets[id].startsAt > now) markets[id] = { ...markets[id], startsAt: now-3600n, endsAt: now+82800n };
+    const {page,context}=await fixturePage();
+    await page.getByRole('button',{name:'Open next market'}).click();
+    await page.getByRole('dialog').waitFor();
+    assert.match(await page.getByRole('dialog').innerText(), /In about 1 hour/);
+    await context.close();
   });
   await test('Filters: status, length, type, search and clear', async () => {
     resetFixtures(); const {page,context}=await fixturePage(); const cards=page.locator('article.market-card');

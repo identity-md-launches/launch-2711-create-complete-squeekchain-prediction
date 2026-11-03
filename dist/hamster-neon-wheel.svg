@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 260" role="img" aria-labelledby="t">
+  <title id="t">A hamster running on a glowing neon wheel</title>
+  <style>
+    @media (prefers-reduced-motion: no-preference) {
+      .spokes { animation: spin 7s linear infinite; transform-origin: 150px 115px; }
+      .flicker { animation: flicker 4s ease-in-out infinite; }
+    }
+    @keyframes spin { to { transform: rotate(-360deg); } }
+    @keyframes flicker { 50% { opacity: .7; } }
+  </style>
+  <defs>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="4" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="14"/></filter>
+    <radialGradient id="floor" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#ff4fd8" stop-opacity=".45"/>
+      <stop offset="1" stop-color="#ff4fd8" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="150" cy="115" r="96" fill="#3ef2ff" opacity=".08" filter="url(#soft)"/>
+  <ellipse cx="150" cy="238" rx="118" ry="13" fill="url(#floor)"/>
+  <g filter="url(#glow)" stroke-linecap="round">
+    <path d="m98 226 30-58h44l30 58" stroke="#ff4fd8" stroke-width="6" fill="none"/>
+    <circle class="flicker" cx="150" cy="115" r="96" stroke="#ff4fd8" stroke-width="6" fill="#120d22" fill-opacity=".85"/>
+    <circle cx="150" cy="115" r="84" stroke="#3ef2ff" stroke-width="2.5" fill="none"/>
+    <g class="spokes" stroke="#3ef2ff" stroke-width="2" opacity=".55">
+      <path d="M150 31v168M66 115h168M90.6 55.6l118.8 118.8M90.6 174.4 209.4 55.6"/>
+      <path d="m118 37 64 156M72 83l156 64M72 147l156-64M118 193l64-156"/>
+    </g>
+    <circle cx="150" cy="115" r="9" fill="#ff4fd8"/>
+  </g>
+  <g transform="translate(0 11)">
+    <path d="M107 166c-10-10-3-34 9-47 16-17 44-17 63-9 15 7 26 23 23 39-3 20-30 30-59 29-13 0-26-4-36-12Z" fill="#c88d4d"/>
+    <path d="M151 166c-7-13-9-32 3-49 12-18 30-26 46-17 19 10 25 34 16 51-9 17-26 27-43 27-10 0-18-4-22-12Z" fill="#e3af72"/>
+    <path d="M167 115c-17-7-16-28-3-30 13-2 19 11 14 24" fill="#c98d51"/>
+    <path d="M169 106c-7-5-8-14-3-15 6-1 9 6 6 13" fill="#e8bca3"/>
+    <path d="M192 102c3-15 18-19 24-10 5 8 1 19-8 22" fill="#c98d51"/>
+    <path d="M200 103c3-7 10-10 12-5 2 5-2 8-7 11" fill="#e8bca3"/>
+    <path d="M164 143c6-14 20-17 28-8 3 3 4 9 12 9 10 0 14-4 18-1 6 4-4 20-21 25-20 7-40-7-37-25Z" fill="#fff4dd"/>
+    <ellipse cx="197" cy="127" rx="4" ry="5" fill="#1b1424"/><circle cx="198" cy="125" r="1.3" fill="#fff"/>
+    <path d="m221 140-6 2 4 4 4-3" fill="#e07b9a"/>
+    <path d="m218 150 16 3m-17-7 18-3m-20-1 15-9" stroke="#f3d9b8" stroke-width="1.2" stroke-linecap="round"/>
+    <ellipse cx="175" cy="173" rx="13" ry="5" fill="#d89a60" transform="rotate(-12 175 173)"/>
+    <ellipse cx="124" cy="172" rx="13" ry="5" fill="#ae743e"/>
+  </g>
+  <g filter="url(#glow)" stroke="#3ef2ff" stroke-width="3" stroke-linecap="round" opacity=".8">
+    <path d="m40 70-12-6m8 30-15-1M262 100l15-5m-19 30 14 3"/>
+  </g>
+</svg>

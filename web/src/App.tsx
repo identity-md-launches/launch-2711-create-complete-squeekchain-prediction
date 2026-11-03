@@ -14,7 +14,13 @@ import { MarketCard, SkeletonCard } from './MarketCard';
 import { MarketDialog, TransactionNotice, type TxState } from './MarketDialog';
 import { CreateDialog, type Preset } from './CreateDialog';
 import { WheelPanel, WheelPulse } from './WheelPanel';
-import { useWheelStats } from './useStats';
+import { usePastWeeks, useWheelStats } from './useStats';
+import { CommunityMarkets, useCalls } from './CommunityMarkets';
+import { HistoryPanel } from './HistoryPanel';
+
+const HERO_IMAGE = './hamster-neon-wheel.svg';
+const CREDITS = ['squeektoshi', 'pillheadddd', 'le_chien65760'];
+const anchors = ['#wheel', '#history', '#community'];
 
 type Tab = 'markets' | 'positions';
 type IconName = Parameters<typeof Icon>[0]['name'];
@@ -47,13 +53,15 @@ export default function App() {
   const statsQuery = useWheelStats(data);
   const stats = statsQuery.data;
   const best24 = stats?.best24;
+  const weeksQuery = usePastWeeks(data);
+  const { calls, choose } = useCalls();
   const now = data ? data.timestamp + BigInt(Math.max(0, Math.floor((tick - data.fetchedAt) / 1000))) : BigInt(Math.floor(tick / 1000));
   const ready = Boolean(data && !query.isError);
   const busy = ['checking', 'wallet', 'pending'].includes(tx.stage);
   const settled = data?.coreState?.settledThroughRound;
   useEffect(() => { const timer = setInterval(() => setTick(Date.now()), 1000); return () => clearInterval(timer); }, []);
   useEffect(() => {
-    const onHash = () => { if (location.hash === '#wheel') return; setTab(tabFromHash()); setFilter('all'); };
+    const onHash = () => { if (anchors.includes(location.hash)) return; setTab(tabFromHash()); setFilter('all'); };
     addEventListener('hashchange', onHash); return () => removeEventListener('hashchange', onHash);
   }, []);
   useEffect(() => { if (isConnected) setWalletOpen(false); }, [isConnected]);
@@ -145,6 +153,7 @@ export default function App() {
   const stakedTotal = positions.reduce((sum, p) => sum + p.yes + p.no, 0n);
   const toClaim = markets.filter(m => (positionOf(m)?.claimable ?? 0n) > 0n);
   const selectedMarket = markets.find(m => m.id === selected?.id);
+  const nextLine: Preset = { ...templates[0], start: 'soon' };
   const resetFilters = () => { setFilter('all'); setDurationFilter('all'); setKindFilter('all'); setSearch(''); };
   const nowSeconds = Number(now);
   const statusFilters = tab === 'markets' ? [['all', 'All'], ['open', 'Open'], ['live', 'In play'], ['settled', 'Settled']] : [['all', 'All bets'], ['claimable', 'To claim'], ['open', 'Open'], ['settled', 'Settled']];
@@ -158,33 +167,36 @@ export default function App() {
         <a href="#markets" aria-current={tab === 'markets' ? 'page' : undefined}>Markets</a>
         <a href="#positions" aria-current={tab === 'positions' ? 'page' : undefined}>My bets{claimableTotal > 0n && <span className="nav-badge" aria-label="winnings to claim">{toClaim.length}</span>}</a>
         <a href="#wheel">Wheel form</a>
+        <a href="#history">Stats</a>
       </nav>
-      <div className="header-actions"><button className="ghost help-button" onClick={() => setHelpOpen(true)}><Icon name="info" size={18}/><span>How it works</span></button><Wallet open={walletOpen} setOpen={setWalletOpen}/></div>
+      <div className="header-actions"><button className="ghost help-button" onClick={() => setHelpOpen(true)} aria-label="How it works"><Icon name="info" size={18}/><span>How it works</span></button><Wallet open={walletOpen} setOpen={setWalletOpen}/></div>
     </div></header>
 
     <main id="main" className="page" tabIndex={-1}>
       <section className="hero" aria-labelledby="hero-title">
         <div className="hero-copy">
-          <h1 id="hero-title">Bet on the hamster’s wheel.</h1>
-          <p className="lead">Over/under markets on real Squeekchain blocks, settled on-chain with Sepolia test ETH.</p>
+          <h1 id="hero-title">Squeek Predict</h1>
+          <p className="lead">Bet test ETH on how many blocks the Squeekchain hamster runs, settled on-chain.</p>
           <div className="hero-actions">
-            <button className="primary" onClick={() => openCreate()} disabled={busy}><Icon name="plus" size={18}/>Create market</button>
-            <button className="secondary" onClick={() => setHelpOpen(true)}>How it works</button>
+            <a className="button primary" href="#board">Bet on a market<Icon name="arrow" size={18}/></a>
+            <button className="secondary" onClick={() => openCreate()} disabled={busy}><Icon name="plus" size={18}/>Create market</button>
           </div>
         </div>
+        <img className="hero-art" src={HERO_IMAGE} width="300" height="260" alt="A hamster running on a glowing neon wheel"/>
         <WheelPulse stats={stats} height={data?.coreState?.blockHeight} loading={statsQuery.isLoading || query.isPending} now={nowSeconds}/>
       </section>
 
       <div className="tabbar" role="navigation" aria-label="Sections">
         <a href="#markets" aria-current={tab === 'markets' ? 'page' : undefined}>Markets</a>
-        <a href="#positions" aria-current={tab === 'positions' ? 'page' : undefined}>My bets{toClaim.length > 0 && <span className="num"> ({toClaim.length} to claim)</span>}</a>
+        <a href="#positions" aria-current={tab === 'positions' ? 'page' : undefined}>My bets{toClaim.length > 0 && <span className="num"> ({toClaim.length})</span>}</a>
+        <a href="#history">Stats</a>
       </div>
 
       <div className="layout">
-        <div className="board">
+        <div className="board" id="board" tabIndex={-1}>
           <div className="board-head">
             <div><h2>{tab === 'markets' ? 'Markets' : 'My bets'}</h2><p className="muted small">{tab === 'markets' ? data ? `${openCount} open · ${eth(totalPool)} ETH in pools` : 'Reading SqueekPredict on Sepolia' : 'Your stakes, results and payouts'}</p></div>
-            <button className="icon-button refresh" onClick={() => { void query.refetch(); void statsQuery.refetch(); }} disabled={query.isFetching} aria-label="Refresh markets"><Icon name="refresh" size={18} className={query.isFetching ? 'spin-once' : ''}/></button>
+            <button className="icon-button refresh" onClick={() => { void query.refetch(); void statsQuery.refetch(); void weeksQuery.refetch(); }} disabled={query.isFetching} aria-label="Refresh markets"><Icon name="refresh" size={18} className={query.isFetching ? 'spin-once' : ''}/></button>
           </div>
 
           {tab === 'positions' && address && data && <div className="summary">
@@ -208,6 +220,7 @@ export default function App() {
           </div>
 
           {tx.stage !== 'idle' && !selected && !creation && <TransactionNotice tx={tx}/>}
+          {tab === 'markets' && data && !query.isError && openCount === 0 && <div className="notice next-up" role="status"><Icon name="clock"/><div><strong>Every listed window has closed</strong><p className="small muted">Ended markets settle below. Open the next {nextLine.duration === DAY ? '24-hour' : '7-day'} window at Over {line(BigInt(nextLine.threshold))}.</p></div><button className="primary" onClick={() => openCreate(nextLine)} disabled={busy}>Open next market</button></div>}
           {query.isError && <div className="notice" role="status"><Icon name="info"/><div><strong>{query.error instanceof Error && query.error.message.includes('verification failed') ? 'Contract verification failed' : 'Couldn’t load fresh market data'}</strong><p className="small muted">{data ? 'Showing the last successful read.' : 'Sepolia is not answering right now.'} Retry, or explore market ideas below.</p></div><button className="secondary" onClick={() => void query.refetch()} disabled={query.isFetching}>{query.isFetching ? 'Retrying…' : 'Retry'}</button></div>}
 
           {tab === 'positions' && !address ? <section className="empty"><div className="empty-icon"><Icon name="ticket" size={28}/></div><h3>Your bets live here.</h3><p className="muted">Connect a wallet to see stakes, results and payouts.</p><button className="primary" onClick={() => setWalletOpen(true)}>Connect wallet<Icon name="arrow" size={18}/></button></section>
@@ -221,8 +234,10 @@ export default function App() {
 
           {data && data.count > BigInt(Math.min(limit, markets.length)) && <div className="load-more"><button className="secondary" onClick={() => setLimit(n => n + 30)} disabled={query.isFetching}>{query.isFetching ? 'Loading…' : 'Load older markets'}</button><span className="small muted">{Math.min(limit, markets.length)} of {String(data.count)} loaded</span></div>}
 
+          {tab === 'markets' && <CommunityMarkets now={nowSeconds} calls={calls} choose={choose}/>}
+
           {tab === 'markets' && <section className="ideas" aria-labelledby="ideas-title">
-            <div className="ideas-head"><h2 id="ideas-title">Start a market</h2><p className="muted small">{stats ? 'Lines suggested from the last 7 certified days.' : 'Suggested lines. Edit before creating.'}</p></div>
+            <div className="ideas-head"><h2 id="ideas-title">Up next: start a market</h2><p className="muted small">{stats ? 'Lines suggested from the last 7 certified days.' : 'Suggested lines. Edit before creating.'}</p></div>
             <div className="idea-grid">{templates.map(t => <button className="idea" key={t.name} onClick={() => openCreate(t)} disabled={busy}><span className="idea-icon"><Icon name={t.icon} size={22}/></span><span className="idea-text"><strong>{t.name}</strong><span className="muted small">{t.note}</span></span><Icon name="chevron" size={18}/></button>)}</div>
           </section>}
 
@@ -234,10 +249,12 @@ export default function App() {
           <div className="chain-status small"><span className={`status-dot ${ready ? 'ok' : query.isError ? 'bad' : ''}`}/>{query.isError ? data ? 'Connection interrupted, showing last read' : 'Sepolia unavailable' : data ? <>Sepolia block <span className="num">{data.blockNumber.toLocaleString()}</span>, refreshes every 30s</> : 'Connecting to Sepolia…'}</div>
         </aside>
       </div>
+
+      <HistoryPanel data={data} failed={query.isError || weeksQuery.isError} weeks={weeksQuery.data} weeksError={weeksQuery.isError} weeksLoading={weeksQuery.isLoading || query.isPending} now={now} settled={settled} best24={best24} calls={calls} onRetry={() => void weeksQuery.refetch()} onOpen={m => openMarket(m)}/>
     </main>
 
     <footer className="site-footer"><div className="footer-inner">
-      <span><strong>Squeek Predict</strong> <span className="muted">· a community testnet market on Squeekchain data</span></span>
+      <div className="footer-brand"><strong>Squeek Predict</strong><p className="credits">Made by {CREDITS.map(h => <span key={h}><a href={`https://x.com/${h}`} target="_blank" rel="noreferrer">@{h}</a> </span>)}on <a href="https://x.com/squeekchain" target="_blank" rel="noreferrer">@squeekchain</a></p></div>
       <span className="footer-links"><a href={`${EXPLORER}/address/${PREDICT_ADDRESS}`} target="_blank" rel="noreferrer">Contract<Icon name="external" size={14}/></a><a href="https://cloud.google.com/application/web3/faucet/ethereum/sepolia" target="_blank" rel="noreferrer">Get test ETH<Icon name="external" size={14}/></a></span>
     </div></footer>
 
