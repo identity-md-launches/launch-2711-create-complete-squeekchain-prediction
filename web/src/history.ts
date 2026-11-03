@@ -31,8 +31,14 @@ export type WheelStats = {
 
 /** Pure: turns whole-block heights at round endpoints into the stats shown on the site. */
 export function computeStats(settledRound: number, genesis: number, roundHeights: Map<number, number>): WheelStats {
-  const at = (r: number) => roundHeights.get(r);
-  const diff = (a: number, b: number) => { const x = at(a), y = at(b); return x === undefined || y === undefined ? 0 : Math.max(0, x - y); };
+  const at = (r: number) => {
+    // Before genesis no blocks exist. A missing certified endpoint is unknown, never zero.
+    if (r < 0) return 0;
+    const height = roundHeights.get(r);
+    if (height === undefined) throw new Error('Wheel history is incomplete. Retry in a moment.');
+    return height;
+  };
+  const diff = (a: number, b: number) => Math.max(0, at(a) - at(b));
   const perRound: number[] = [];
   for (let r = settledRound - 143; r <= settledRound; r++) perRound.push(diff(r, r - 1));
   const hourly: number[] = [];
@@ -69,6 +75,6 @@ export async function readWheelStats(core: Address, settledRound: bigint, genesi
   results.forEach((res, i) => {
     if (res.status === 'fulfilled' && res.value.certifiedThroughRound === BigInt(rounds[i])) heights.set(rounds[i], Number(res.value.end.cumulativeBlockUnits / UNITS));
   });
-  if (heights.size < rounds.length * 0.8) throw new Error('Wheel history is incomplete. Retry in a moment.');
+  if (heights.size !== rounds.length) throw new Error('Wheel history is incomplete. Retry in a moment.');
   return computeStats(settled, Number(genesis), heights);
 }

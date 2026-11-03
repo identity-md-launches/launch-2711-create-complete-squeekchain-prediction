@@ -49,13 +49,14 @@ test('tiny positive balances are never displayed as zero', () => {
   assert.equal(eth(0n), '0');
   assert.equal(eth(parseEther('0.001')), '0.001');
 });
-import { odds, kind, line, sideName, roundAt, roundStart, checkStart } from '../src/model.ts';
+import { odds, kind, line, sideName, title, roundAt, roundStart, checkStart } from '../src/model.ts';
 test('pool odds, sides and market kinds follow the contract rule', () => {
   assert.equal(odds({ yesPool: parseEther('3'), noPool: parseEther('1') }, true), 1.333);
   assert.equal(odds({ yesPool: parseEther('3'), noPool: parseEther('1') }, false), 4);
   assert.equal(odds({ yesPool: 0n, noPool: parseEther('1') }, true), null);
   assert.equal(line(1000n), '1,000.5');
-  assert.equal(sideName({ threshold: 0n }, true), 'Runs');
+  assert.equal(sideName({ threshold: 0n }, true), 'At least one block');
+  assert.equal(sideName({ threshold: 0n }, false), 'No blocks');
   const day = { startsAt: 0n, endsAt: 86400n };
   assert.equal(kind({ ...day, threshold: 0n }), 'Activity');
   assert.equal(kind({ ...day, threshold: 1200n }, 1100), 'Record attempt');
@@ -68,4 +69,11 @@ test('custom starts snap to the next round and respect the lead window', () => {
   assert.throws(() => checkStart(10000n + 3600n, 10000n));
   assert.doesNotThrow(() => checkStart(10000n + 3900n, 10000n));
   assert.throws(() => checkStart(10000n + 604800n, 10000n));
+});
+
+test('zero-threshold questions describe block completion for either supported window', () => {
+  assert.equal(title({ threshold: 0n, startsAt: 0n, endsAt: 86400n }), 'Will the hamster complete a block in this 24-hour window?');
+  assert.equal(title({ threshold: 0n, startsAt: 0n, endsAt: 604800n }), 'Will the hamster complete a block in this 7-day window?');
+  const completed = 500000000n / 1000000000n - 100000000n / 1000000000n;
+  assert.equal(sideName({ threshold: 0n }, completed > 0n), 'No blocks');
 });

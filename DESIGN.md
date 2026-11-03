@@ -4,7 +4,7 @@ Taken from the final source in `web/src/styles.css` and the React components in 
 
 ## Direction
 
-A serious but friendly sportsbook board for one hamster. Dark graphite surfaces, an amber hamster accent for primary actions, mint for Over/Yes and coral for Under/No, and odds shown as large tabular numbers. Motion is short and functional: cards rise in, buttons press, the wheel icon spins only while the hamster was running in the last certified hour.
+A serious but friendly sportsbook board for one hamster. Dark graphite surfaces, an amber hamster accent for primary actions, mint for Over/Yes and coral for Under/No, and odds shown as large tabular numbers. Motion is short and functional: cards rise in, buttons press, the wheel icon spins only when a block completed in the last certified hour.
 
 ## Color tokens (`:root`)
 
@@ -43,7 +43,7 @@ One family: the system UI stack (`ui-sans-serif, system-ui, -apple-system, 'Sego
 | `--t-display` | 1.875rem (30px) | H1 on phones |
 | `--t-hero` | 2.75rem (44px) | H1 on wider screens |
 
-The probe counted 5 sizes per width (390: 13/16/18/22/30, 1440: 13/16/18/22/44).
+The original populated-board probe counted 5 sizes per width (390: 13/16/18/22/30, 1440: 13/16/18/22/44). The revision probe, run offline, uses a subset of the same scale. Market questions, numerical lines, side labels and multipliers use `overflow-wrap: anywhere`, preserving the entire value rather than clipping or ellipsizing it.
 
 ## Spacing, radius, motion
 
@@ -55,12 +55,12 @@ The probe counted 5 sizes per width (390: 13/16/18/22/30, 1440: 13/16/18/22/44).
 ## Components
 
 - **Header** (`App.tsx`): sticky, blurred translucent bar; logo + "Squeek Predict"; nav (Markets, My bets with a claim badge, Wheel form); How it works; wallet button (amber; "Connect" on phones, short address when connected, "Switch to Sepolia" on the wrong chain).
-- **Hero**: H1 "Bet on the hamster’s wheel.", one plain line, primary **Create market** and secondary **How it works**. On phones and tablets a **WheelPulse** card follows (live status, certified 24h blocks, lag) linking to the wheel panel.
-- **Tab bar** (phones only): sticky segmented Markets / My bets below the header.
+- **Hero**: H1 "Bet on the hamster’s wheel.", one plain line, primary **Create market** and secondary **How it works**. On phones and tablets a **WheelPulse** card follows (blocks completed in the last certified hour, certified 24h blocks, lag) linking to the wheel panel.
+- **Tab bar** (up to 900px): sticky segmented Markets / My bets below the header.
 - **Filters**: status chips (horizontal scroll on phones), search field, length, type and sort selects.
-- **MarketCard** (`MarketCard.tsx`): type tag with icon, status pill (open mint, in play blue, waiting amber, done grey), question as a button, countdown, two odds buttons (Over mint, Under coral, multiplier `1.67x` or `Open`), pool split bar, pool total / share / market number, your position line, and a claim / resolve / refund action when relevant. Resolved cards show the winning side and the certified block count. `SkeletonCard` is the loading state.
-- **WheelPanel** (`WheelPanel.tsx`): heading with spinning wheel when running, live line with certification lag, 144-bar sparkline of blocks per round, 3×2 window grid (1h to 7 days), facts list (longest run, active rounds, best 24h, daily average), daypart bars, and a note that these are stats only. Loading skeleton, error with retry.
-- **Bet slip** (`MarketDialog.tsx` in `Modal.tsx`): native `<dialog>` with focus return; centered on desktop, bottom sheet on phones. Window dates, side pools, side picker with live odds, stake field with quick amounts, payout estimate, position and claim with an editable receiving address, resolve/refund actions, settlement details.
+- **MarketCard** (`MarketCard.tsx`): type tag with icon, status pill (open mint, in play blue, waiting amber, done grey), question as a button, countdown, two odds buttons (Over mint, Under coral; line zero uses At least one block / No blocks; multiplier `1.67x` or `Open`), pool split bar, pool total / share / market number, your position line, and a claim / resolve / refund action when relevant. Resolved cards show the winning side and the certified block count. `SkeletonCard` is the loading state.
+- **WheelPanel** (`WheelPanel.tsx`): heading with spinning wheel when a block completed in the last certified hour, certification line with certification lag, 144-bar sparkline of blocks per round, 3×2 window grid (1h to 7 days), facts list (longest block streak, rounds with blocks, best 24h, daily average), daypart bars, and a note that these are stats only. Loading skeleton, error with retry when any requested certified endpoint is unavailable. The streak is explicitly defined as consecutive rounds with completed blocks, not continuous running.
+- **Bet slip** (`MarketDialog.tsx` in `Modal.tsx`): native `<dialog>` with focus return; centered on desktop, bottom sheet on phones. Window dates, side pools, side picker with pool odds, stake field with quick amounts, payout estimate, position and claim with an editable receiving address, resolve/refund actions, settlement details. Odds, side-choice and fact grids use `repeat(2, minmax(0, 1fr))`; side labels and multipliers have zero minimum width. At ≤760px each side label sits above its multiplier; long submit labels wrap as well.
 - **Create dialog** (`CreateDialog.tsx`): segmented 24 hours / 7 days, line stepper (±10), Over/Under explanation, start chips (about 1 hour, 6 hours, next 06:00, next 18:00, pick a time with `datetime-local`), window preview, inline validation of the 65-minute to 7-day lead.
 - **Market ideas**: six idea buttons with icon wells, lines computed from the last 7 certified days.
 - **My bets**: staked / ready-to-claim summary tiles and a mint claim list with one-tap Claim per market.
@@ -71,6 +71,8 @@ The probe counted 5 sizes per width (390: 13/16/18/22/30, 1440: 13/16/18/22/44).
 
 - **≥1081px**: content max 1280px; two columns, board `minmax(0,1fr)` and a 360px sticky wheel panel; hero single column (the pulse card is hidden because the panel is visible); market grid auto-fills 300px+ cards.
 - **≤1080px**: one column; wheel panel moves below the board; hero shows the pulse card.
-- **≤760px**: 56px header with nav and help hidden, wallet label shortened; H1 30px; secondary hero button hidden; sticky Markets / My bets tab bar; status chips scroll horizontally edge to edge; search full width over three selects; one card per row; dialogs become bottom sheets.
-- **≤360px**: brand text hidden (logo only), selects in two columns, summary tiles stacked.
-- Checked at 320, 390 and 1440 wide with no horizontal scroll.
+- **≤900px**: 56px compact header with nav and help hidden, wallet label shortened; sticky Markets / My bets tabs provide navigation. This includes the connected claim-badge and wrong-network states.
+- **≤760px**: H1 30px; secondary hero button hidden; status chips scroll horizontally edge to edge; search full width over three selects; one card per row; dialogs become bottom sheets; side-picker labels stack above their multipliers.
+- **≤420px**: brand text hidden; the linked logo and its “Squeek Predict home” accessible name remain, leaving room for the complete “Switch to Sepolia” action.
+- **≤360px**: selects in two columns, summary tiles stacked.
+- Header checked disconnected, connected and on the wrong network at 320, 375, 390, 420, 421, 760, 761, 768, 800, 820, 850, 851, 876, 900, 901 and 1440px with no horizontal scroll. Full uint64 lines checked in cards and connected slips at 320, 390 and 1440px; the ordinary 1,000.5 line also checked at 320px.

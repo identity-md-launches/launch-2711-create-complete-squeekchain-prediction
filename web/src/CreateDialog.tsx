@@ -71,7 +71,7 @@ export function CreateDialog({ preset, snapshot, now, ready, tx, transact, onClo
         <div className="amount-field"><input ref={field} id="threshold" name="threshold" inputMode="numeric" autoComplete="off" value={threshold} onChange={e => { setThreshold(e.target.value); setError(''); onReset(); }} aria-invalid={Boolean(error)} aria-describedby="line-help create-error" disabled={busy}/><span>blocks</span></div>
         <button type="button" className="icon-button" aria-label="Raise the line by 10" onClick={() => step(10)} disabled={busy}>+</button>
       </div>
-      <p className="small muted" id="line-help">{count !== undefined ? <>Bettors pick <strong>Over {line(count)}</strong> or <strong>Under {line(count)}</strong>. Exactly {count.toLocaleString()} counts as under.</> : 'Enter a whole number of blocks.'}</p>
+      <p className="small muted" id="line-help">{count === 0n ? <>Bettors pick <strong>At least one block</strong> or <strong>No blocks</strong>. Only completed Squeek blocks count.</> : count !== undefined ? <>Bettors pick <strong>Over {line(count)}</strong> or <strong>Under {line(count)}</strong>. Exactly {count.toLocaleString()} counts as under.</> : 'Enter a whole number of blocks.'}</p>
       <fieldset className="chips" disabled={busy}><legend>Window starts</legend>
         {startLabels.map(([v, label]) => <label key={v} className={choice === v ? 'chosen' : ''}><input type="radio" name="start" checked={choice === v} onChange={() => { setChoice(v); onReset(); }}/>{label}</label>)}
       </fieldset>

@@ -1,4 +1,58 @@
-# Validation: Squeek Predict website upgrade
+# Revision validation — 2026-11-03
+
+This is the current review of the revised export. The original upgrade record below is historical; its counts, live observations and limitations are superseded by this section where they differ. All four reported defects reproduced before source changes and are fixed. Raw original measurements: [revision-reproduction.json](revision-reproduction.json).
+
+## Scope and corrections
+
+This revision preserves the existing application, contracts, ABI/runtime verification, wallet connectors and transaction construction. No dependency, package manifest, lockfile, build configuration or ignore file changed. Only the reported layout, history completeness and block-completion terminology were corrected, with regression tests and rebuilt static assets.
+
+| Finding | Source in final implementation | Original reproduction | Correction and recheck |
+| --- | --- | --- | --- |
+| High: long valid market lines | `web/src/styles.css:131`, `:234`, `:242`, `:290`, `:334` | At both 320/390px, uint64 max made the board 567px wide. Slip scrollWidth 744px; normal 1,000.5 line at 320px scrolled to 327px. | Zero-minimum two-column grids and children, wrapping full labels/numbers, stacked side labels/multipliers on phones, wrapping submit action. Full uint64 cards and connected slips pass at 320/390/1440px; normal 1,000.5 passes at 320px. Final 320/390 document widths equal the viewport; 318/388 slip client and scroll widths match. Text-range bounds prove labels and multipliers fit, and keyboard side selection works. |
+| High: wallet header overflow | `web/src/styles.css:304`, `:345` | Wrong-network header reached 407px at 375/390; disconnected header reached 827px at 761–820. | Compact header + navigation through 900px; linked, named logo without brand text through 420px. A first 850px cutoff still failed at 851 after the claim badge loaded (right edge 876.25), so only header/navigation use 900; the existing content breakpoints remain. Disconnected, connected and network-switch states pass at 16 widths, and switching succeeds through the mock provider. |
+| Medium: unavailable history became zero | `web/src/history.ts:34`, `:78` | Missing rounds 99995–100000 changed 18/54/108/216/432/3024 blocks to six zeros and Resting. | Require every requested certified endpoint; throw on missing nonnegative data. Six failed endpoints, a single interior failure and an uncertified endpoint all show the wheel retry state without stats. Retry restores exact complete totals. Known pre-genesis time remains zero; short-history regression passes. |
+| Medium: activity claims differed from the wager | `web/src/model.ts:89`, `:93`; `WheelPanel.tsx:16`, `:35`, `:44`; `App.tsx:68`; `CreateDialog.tsx:74`; `MarketCard.tsx:32` | Positive fractional work was called Resting; zero-threshold questions offered Runs/Rests. | Wager sides say At least one block / No blocks, for either supported duration. Wheel labels name completed blocks and explain block streaks. Positive partial work stays zero **completed blocks** without a resting claim. A fixture with start/end 0.1/0.5 blocks displays No blocks as winner. |
+
+## Better Interface coverage
+
+Applied the pinned workflow and all six domains to the affected surfaces while keeping the incumbent design.
+
+| Domain | Coverage and evidence | Limits |
+| --- | --- | --- |
+| Accessibility | Checked native side radios by keyboard, dialog close, named linked logo at compact sizes, full network-switch action, focus ring visible in the long-line slip screenshot; populated-board axe WCAG 2.2 AA scan at 390px: 0 violations. | No screen-reader, physical device, native zoom, forced-colors or full manual keyboard audit. |
+| Layout | Checked board, dialogs and header across phone/tablet/desktop widths. Text-fragment bounds and container scroll widths are asserted, including the extreme uint64 line. Product and Create market remain on the first screen at 390px. | Viewport emulation is not native zoom. RTL/localization is not implemented or tested. |
+| Writing | Checked every zero-threshold path (card, pools, sides, result, preset and create help). Missing history stays unknown; status and streak labels name completed blocks rather than physical activity. | These are block-derived statistics, not physical-wheel telemetry. |
+| Typography | Existing six-size scale, system font and weights retained. Long numerical labels wrap completely without ellipsis; side labels stack over multipliers on phones. | Other OS system-font rendering not tested. |
+| Colors | Existing tokens retained. Offline taste probe: all measured solid-background text passes 4.5:1 (3:1 large). | 29 text boxes over gradients/media were not measured by the probe; no claim of complete contrast coverage. |
+| UI | Loading, success, unavailable-history, retry/recovery and wrong-network states exercised. Short motion retained; populated wheel reduced-motion check confirms one iteration. Offline probe reports no `transition: all` or endless reduced-motion animation. | No slowed Animations-panel review or physical-device testing. |
+
+## Commands and actual results
+
+Build/test dependencies were installed with `npm ci --cache /tmp/squeek-npm-cache --no-audit --no-fund` in a disposable `/tmp/squeek-revision/web` mirror copied from the repository, including its unchanged `.npmrc`, package manifest, lockfile and Vite configuration. Source and export were compared to the delivered versions. No packages or caches from this mirror are submitted.
+
+| Command | Result |
+| --- | --- |
+| `npm run typecheck` (mirror `web/`) | Passed, no TypeScript errors after final source corrections. |
+| `npm test` (mirror `web/`) | 9/9 passed. |
+| `npm run build` (mirror `web/`) | Passed, Vite 7.3.7, 1,841 modules; main chunk 656.33 kB minified / 199.87 kB gzip. Existing >500 kB advisory remains. Copied the complete output to repository `dist/`, removing obsolete hashed chunks. |
+| `PLAYWRIGHT_BROWSERS_PATH=/tmp/squeek-browsers SHOTS_DIR=<repository>/test/scratch/revision node /tmp/squeek-revision/web/tests/browser-check.mjs` | 15/15 Chromium scenarios passed against the production export at `/preview/`. [interaction-results.json](interaction-results.json). |
+| `PLAYWRIGHT_BROWSERS_PATH=/tmp/squeek-browsers IMD_PLAYWRIGHT=/tmp/squeek-revision/web/node_modules/playwright/index.mjs node .imd/reads/skills/design-critic/scripts/taste.mjs --out test/scratch/taste --offline` (repo root) | 16/16 passed at 320/390/1440px, including relative local assets and share metadata. [taste.json](taste.json). Measures the RPC-unavailable entry state, not populated markets. |
+| Final screenshot capture using the same fixture helpers, after entry animations | Passed at 320/390/1440px; populated wheel reduced-motion check passed. |
+| Browser MCP inspection at 1280×720 | Inspected actual export under `/preview/`, opened Wake-up call creation, read its block-completion labels, used Connect to create market to reach wallet chooser, closed it. Offline preview deliberately blocks RPC with CSP; console network errors are expected in that inspection. No signature requested. |
+| WebKit launch | Could not launch: required system libraries (including libgtk-4, libgraphene and libevent) are absent. No WebKit result is claimed. |
+| `git diff --check` | Passed. |
+
+Header widths: 320, 375, 390, 420, 421, 760, 761, 768, 800, 820, 850, 851, 876, 900, 901 and 1440 CSS px. New regression cases are in `web/tests/browser-check.mjs`; earlier filter, stake, create, claim, resolve, phone wallet and RPC-outage interactions still pass. Fixtures do not send real transactions. Reproduction failures were observed against the original export before editing, not inferred from the report.
+
+Current screenshots: `screenshots/fixture-390.png`, `fixture-320.png`, `fixture-1440.png`, `mobile-bet-slip.png`, `long-line-slip-390.png`, `wrong-network-390.png`. Viewed the final phone, desktop, full-line and wrong-network images. `live-390.png`, `live-1440.png` and `chain-observation.json` remain historical evidence from the original upgrade; no live RPC observation was repeated in this revision.
+
+Complete for the four findings. Remaining limitations: WebKit unavailable; no physical phone, native zoom, screen reader, real wallet signature or live transaction; no new live-chain availability claim. Required source, unchanged dependency lockfile, static export, metadata and runtime assets remain included. Packaging checks: `dist/` is 871,197 bytes; all artifacts remain under 1.1 MiB (within the existing 1.5 MiB path budget); added/changed submission files, conservatively including the review response metadata, remain under 1.7 MiB (limit 8 MiB). No submodule, dependency directory, cache, package archive or obsolete asset chunk was added. No ignore file was changed.
+
+---
+
+## Original upgrade record (historical)
+
+### Validation: Squeek Predict website upgrade
 
 ## Scope and assumptions
 

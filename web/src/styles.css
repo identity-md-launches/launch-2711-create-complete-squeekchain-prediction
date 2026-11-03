@@ -128,7 +128,9 @@ select, .text-input { min-height: 40px; padding: 0 var(--s-3); border-radius: va
 .question-button { padding: 0; text-align: left; font-size: var(--t-title); font-weight: 700; line-height: 1.35; color: var(--ink); }
 .question-button:hover { text-decoration: underline; text-decoration-color: var(--line-strong); }
 .market-time { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: var(--t-small); }
-.odds-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-2); margin-top: var(--s-1); }
+.odds-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-2); margin-top: var(--s-1); }
+.market-card, .modal { min-width: 0; overflow-wrap: anywhere; }
+.odds, .odds > span, .side-choice label, .side-choice label > span { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
 .odds { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-height: 64px; padding: var(--s-3); border-radius: var(--r-control); text-align: left; border: 1px solid; transition: background-color 160ms var(--ease), border-color 160ms var(--ease), transform 120ms var(--ease); }
 .odds-yes { background: var(--yes-bg); border-color: var(--yes-line); }
 .odds-no { background: var(--no-bg); border-color: var(--no-line); }
@@ -193,7 +195,7 @@ select, .text-input { min-height: 40px; padding: 0 var(--s-3); border-radius: va
 .panel-loading, .panel-empty { display: grid; gap: var(--s-3); }
 .live-line { display: flex; gap: var(--s-2); align-items: baseline; font-size: var(--t-small); color: var(--muted); }
 .live-line .status-dot { transform: translateY(-1px); color: var(--faint); }
-.live-line.is-running .status-dot { color: var(--yes); animation: pulse 2s ease-in-out infinite; }
+.live-line.has-blocks .status-dot { color: var(--yes); animation: pulse 2s ease-in-out infinite; }
 .live-line strong { color: var(--ink); }
 .spark svg { display: block; width: 100%; height: 72px; fill: var(--accent); }
 .spark figcaption { display: flex; justify-content: space-between; margin-top: var(--s-1); }
@@ -229,7 +231,7 @@ select, .text-input { min-height: 40px; padding: 0 var(--s-3); border-radius: va
 .modal > p, .modal > dl, .modal > div, .modal > section, .modal > h3 { margin-bottom: var(--s-3); }
 .dialog-market-meta { display: flex; justify-content: space-between; color: var(--muted); font-size: var(--t-small); }
 .dialog-question { font-size: var(--t-section); }
-.market-facts, .dialog-pools { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-2); }
+.market-facts, .dialog-pools { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-2); }
 .market-facts div, .dialog-pools div { display: grid; padding: var(--s-3); border-radius: var(--r-control); background: var(--raised); }
 .market-facts dt, .dialog-pools span { font-size: var(--t-small); color: var(--muted); }
 .market-facts dd { font-size: var(--t-small); font-weight: 600; }
@@ -237,7 +239,7 @@ select, .text-input { min-height: 40px; padding: 0 var(--s-3); border-radius: va
 fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
 legend, .field-label { display: block; margin-bottom: var(--s-2); font-weight: 600; }
 .field-label span { color: var(--muted); font-weight: 400; margin-left: 6px; font-size: var(--t-small); }
-.side-choice { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-2); }
+.side-choice { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-2); }
 .side-choice legend { grid-column: 1 / -1; }
 .side-choice label { display: flex; justify-content: space-between; align-items: center; gap: var(--s-2); min-height: 56px; padding: var(--s-3); border-radius: var(--r-control); background: var(--raised); border: 1px solid var(--line); cursor: pointer; font-weight: 700; transition: background-color 160ms, border-color 160ms; }
 .side-choice label.selected-yes { background: var(--yes-bg); border-color: var(--yes); color: var(--yes); }
@@ -285,6 +287,7 @@ legend, .field-label { display: block; margin-bottom: var(--s-2); font-weight: 6
 .wallet-notice:empty { display: none; }
 .modal .address { overflow-wrap: anywhere; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: var(--t-small); }
 .modal .full + .full { margin-top: var(--s-2); }
+.modal .primary { white-space: normal; }
 
 /* Footer */
 .site-footer { border-top: 1px solid var(--line); }
@@ -298,13 +301,20 @@ legend, .field-label { display: block; margin-bottom: var(--s-2); font-weight: 6
   .side { position: static; }
   .hero { grid-template-columns: minmax(0, 1fr); gap: var(--s-5); }
 }
-@media (max-width: 760px) {
+@media (max-width: 900px) {
   .header-inner { padding: 0 var(--s-4); min-height: 56px; gap: var(--s-3); }
   .main-nav, .help-button { display: none; }
   .wallet-button { padding: 0 var(--s-3); }
   .wide-only { display: none; }
   .brand { font-size: var(--t-body); }
   .brand img { width: 30px; height: 30px; }
+  .tabbar { position: sticky; top: 56px; z-index: 10; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin: 0 0 var(--s-4); border-radius: var(--r-control); background: var(--surface); border: 1px solid var(--line); }
+  .tabbar a { display: flex; align-items: center; justify-content: center; gap: var(--s-2); min-height: 40px; border-radius: 8px; text-decoration: none; color: var(--muted); font-weight: 600; }
+  .tabbar a[aria-current="page"] { background: var(--raised); color: var(--ink); }
+  .count { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: var(--r-pill); background: var(--raised); font-size: var(--t-small); }
+  .count.hot { background: var(--yes); color: #062015; }
+}
+@media (max-width: 760px) {
   .page { padding: var(--s-4) var(--s-4) var(--s-8); }
   .hero { margin-bottom: var(--s-4); gap: var(--s-4); }
   .hero h1 { font-size: var(--t-display); }
@@ -313,11 +323,6 @@ legend, .field-label { display: block; margin-bottom: var(--s-2); font-weight: 6
   .hero-actions .secondary { display: none; }
   .hero-actions .primary { flex: 1; }
   .pulse { padding: var(--s-3); }
-  .tabbar { position: sticky; top: 56px; z-index: 10; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin: 0 0 var(--s-4); border-radius: var(--r-control); background: var(--surface); border: 1px solid var(--line); }
-  .tabbar a { display: flex; align-items: center; justify-content: center; gap: var(--s-2); min-height: 40px; border-radius: 8px; text-decoration: none; color: var(--muted); font-weight: 600; }
-  .tabbar a[aria-current="page"] { background: var(--raised); color: var(--ink); }
-  .count { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: var(--r-pill); background: var(--raised); font-size: var(--t-small); }
-  .count.hot { background: var(--yes); color: #062015; }
   .board-head { margin-bottom: var(--s-3); }
   .filters { flex-direction: column; flex-wrap: nowrap; align-items: stretch; margin-bottom: var(--s-4); }
   .chip-row { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 calc(var(--s-4) * -1); padding: 0 var(--s-4); }
@@ -326,7 +331,8 @@ legend, .field-label { display: block; margin-bottom: var(--s-2); font-weight: 6
   .search-field { grid-column: 1 / -1; }
   .search-field input { width: 100%; }
   .filter-tools select { width: 100%; min-width: 0; padding: 0 var(--s-2); }
-  .market-grid { grid-template-columns: 1fr; }
+  .market-grid { grid-template-columns: minmax(0, 1fr); }
+  .side-choice label { flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; }
   .empty { padding: var(--s-8) var(--s-4); }
   .claim-list li { flex-wrap: wrap; }
   .claim-name { flex-basis: 100%; }
@@ -336,8 +342,10 @@ legend, .field-label { display: block; margin-bottom: var(--s-2); font-weight: 6
   .modal[open] { animation: sheet 260ms var(--ease); }
   @keyframes sheet { from { transform: translateY(40px); opacity: 0; } }
 }
-@media (max-width: 360px) {
+@media (max-width: 420px) {
   .brand span { display: none; }
+}
+@media (max-width: 360px) {
   .filter-tools { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .summary { grid-template-columns: 1fr; }
 }

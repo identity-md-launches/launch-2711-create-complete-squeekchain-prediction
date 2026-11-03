@@ -29,7 +29,7 @@ export function MarketCard({ market: m, position: p, now, settled, best24, onOpe
     <div className={`pool-bar ${total === 0n ? 'empty-pool' : ''}`} aria-hidden="true"><span style={{ width: `${yesPercent}%` }}/></div>
     <div className="card-foot">
       <span>Pool <strong className="num" title={`${exactEth(total)} ETH`}>{eth(total)} ETH</strong></span>
-      <span className="num">{total === 0n ? 'No bets yet' : `${Math.round(yesPercent)}% on ${m.threshold === 0n ? 'runs' : 'over'}`}</span>
+      <span className="num">{total === 0n ? 'No bets yet' : `${Math.round(yesPercent)}% on ${m.threshold === 0n ? 'at least one block' : 'over'}`}</span>
       <span className="num muted">#{m.id.toString()}</span>
     </div>
     {hasPosition && <div className="position-line"><Icon name="ticket" size={16}/><span>{p.claimed ? 'Position claimed' : p.claimable > 0n ? <><strong className="num">{eth(p.claimable)} ETH</strong> ready to claim</> : <>Your stake <strong className="num">{eth(p.yes + p.no)} ETH</strong></>}</span></div>}

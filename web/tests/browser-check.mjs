@@ -26,6 +26,8 @@ let markets;
 let positions;
 let transactions;
 let rpcMode = 'ok';
+let historyMode = 'complete';
+let settledRound = 100000n;
 function resetFixtures() {
   markets = {
     1: { ...base },
@@ -36,7 +38,7 @@ function resetFixtures() {
     6: { ...base, startsAt: now-2n*86400n, endsAt: now-86400n },
   };
   positions = { 1: {...empty, yes: parseEther('0.001')}, 4: {...empty, yes: parseEther('0.002'), claimable: parseEther('0.004')}, 5: {...empty, yes:parseEther('0.001')} };
-  transactions = []; rpcMode='ok';
+  transactions = []; rpcMode='ok'; historyMode='complete'; settledRound=100000n;
 }
 resetFixtures();
 const mime = {'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png'};
@@ -77,9 +79,11 @@ async function routeRpc(route) {
           case 'getMarket': result=encoded(abi,d.functionName,markets[id]); break;
           case 'positions': { const p=positions[id]??empty; result=encoded(abi,d.functionName,[p.yes,p.no,p.claimed]); break; }
           case 'claimable': result=encoded(abi,d.functionName,positions[id]?.claimable??0n); break;
-          case 'state': result=encoded(coreAbi,d.functionName,{settledThroughRound:100000n,cumulativeWork:100000n,cumulativeBlockUnits:13095000000000n,blockHeight:13095n,blockProgress:0n,workPerThousandBlocks:1000,authorizationNonce:1n,paused:false}); break;
+          case 'state': result=encoded(coreAbi,d.functionName,{settledThroughRound:settledRound,cumulativeWork:100000n,cumulativeBlockUnits:13095000000000n,blockHeight:13095n,blockProgress:0n,workPerThousandBlocks:1000,authorizationNonce:1n,paused:false}); break;
           case 'configuration': result=encoded(coreAbi,d.functionName,{streamId:base.streamId,genesisTimestamp:genesis,roundDuration:600n,maxWorkPerRound:1000n,maxRoundsPerBatch:100,guardian:CORE,reporter:CORE,initialWorkPerThousandBlocks:1000,targetBlocksPerActiveRound:1n,difficultySmoothingRounds:1n,blockUnitsPerBlock:1000000000n}); break;
-          case 'roundPage': { const r=d.args[0]; const h=r*3n; result=encoded(coreAbi,d.functionName,{certifiedThroughRound:r,start:{cumulativeWork:r,cumulativeBlockUnits:h*1000000000n,workPerThousandBlocks:1000},end:{cumulativeWork:r,cumulativeBlockUnits:h*1000000000n,workPerThousandBlocks:1000},rounds:[]}); break; }
+          case 'roundPage': { const r=d.args[0];
+            if ((historyMode==='partial' && r>=99995n) || (historyMode==='interior' && r===99990n)) return {jsonrpc:'2.0',id:q.id,error:{code:-32000,message:'History unavailable'}};
+            const h=r*3n; result=encoded(coreAbi,d.functionName,{certifiedThroughRound:historyMode==='uncertified' && r===settledRound?r-1n:r,start:{cumulativeWork:r,cumulativeBlockUnits:historyMode==='fractional'?r*1000n:h*1000000000n,workPerThousandBlocks:1000},end:{cumulativeWork:r,cumulativeBlockUnits:historyMode==='fractional'?r*1000n:h*1000000000n,workPerThousandBlocks:1000},rounds:[]}); break; }
           case 'createMarket': result=encoded(abi,d.functionName,7n); break;
           case 'claim': result=encoded(abi,d.functionName,positions[id]?.claimable??0n); break;
           default: result='0x';
@@ -129,7 +133,24 @@ async function fixturePage(viewport={width:1440,height:1000}, mobile=false) {
   return {page,context};
 }
 async function test(name,fn) {try{await fn();results.push({name,passed:true});console.log('PASS',name);}catch(e){results.push({name,passed:false,error:e.message});console.error('FAIL',name,e.stack);}}
-const noOverflow = async page => assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'page scrolls horizontally');
+const noOverflow = async page => assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), 'page scrolls horizontally');
+// Check scroll containers and the rendered text fragments, not just the document viewport.
+const assertNoScroll = async locator => assert.ok(await locator.evaluate(el=>el.scrollWidth<=el.clientWidth), 'container scrolls horizontally');
+const assertInViewport = async locator => assert.ok(await locator.evaluate(el=>{const r=el.getBoundingClientRect();return r.left>=0 && r.right<=document.documentElement.clientWidth;}), 'control is outside viewport');
+async function assertTextFits(locator) {
+  for (const element of await locator.all()) {
+    const outside=await element.evaluate(el=>{
+      const box=el.getBoundingClientRect(); const walker=document.createTreeWalker(el,NodeFilter.SHOW_TEXT); const failures=[];
+      for(let node; (node=walker.nextNode());) {
+        if(!node.textContent.trim())continue;
+        const range=document.createRange(); range.selectNodeContents(node);
+        for(const r of range.getClientRects())if(r.left<box.left-1 || r.right>box.right+1 || r.top<box.top-1 || r.bottom>box.bottom+1)failures.push(node.textContent);
+      }
+      return failures;
+    });
+    assert.deepEqual(outside,[], 'full label and multiplier must fit their control');
+  }
+}
 try {
   await test('Markets render with odds, wheel stats and no console errors (1440)', async () => {
     resetFixtures(); const {page,context}=await fixturePage(); const errors=[]; page.on('pageerror',e=>errors.push(e.message));
@@ -223,12 +244,114 @@ try {
       const h1=await page.locator('h1').boundingBox(); assert.ok(h1.y<200);
       await page.screenshot({path:`${shots}/fixture-${width}.png`});
       await page.locator('article.market-card').first().locator('.odds-yes').click();
-      await page.getByRole('dialog',{name:'Bet slip'}).waitFor(); await noOverflow(page);
+      await page.getByRole('dialog',{name:'Bet slip'}).waitFor(); await noOverflow(page); await assertNoScroll(page.getByRole('dialog',{name:'Bet slip'}));
       if (width===390) await page.screenshot({path:`${shots}/mobile-bet-slip.png`});
       await page.keyboard.press('Escape');
       if (width===390) { const axe=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa','wcag22aa']).analyze(); assert.deepEqual(axe.violations.map(v=>`${v.id}: ${v.nodes.length}`), []); }
       await context.close();
     }
+  });
+  await test('Full uint64 lines fit cards and connected slips at phone and desktop widths', async () => {
+    for (const [threshold, width] of [[18446744073709551615n,390],[18446744073709551615n,320],[18446744073709551615n,1440],[1000n,320]]) {
+      resetFixtures(); markets[1].threshold=threshold;
+      const {page,context}=await fixturePage({width,height:844});
+      await page.locator('.window-grid dd').first().waitFor();
+      await page.waitForTimeout(600); // Finish card entry animation before measuring boxes.
+      await noOverflow(page);
+      const card=page.locator('article.market-card').filter({hasText:'#1'});
+      const line=`${threshold.toLocaleString('en-US')}.5`;
+      assert.deepEqual(await card.locator('.odds-side').allTextContents(), [`Over ${line}`,`Under ${line}`]);
+      await assertTextFits(card.locator('.odds'));
+      await page.getByRole('button',{name:/^Connect( wallet)?$/}).click();
+      await page.getByRole('button',{name:/Test Browser Wallet/}).click();
+      await page.getByRole('button',{name:/0x1234…7890/}).waitFor();
+      await card.locator('.odds-yes').click();
+      const slip=page.getByRole('dialog',{name:'Bet slip'});
+      await page.waitForTimeout(300);
+      await assertNoScroll(slip);
+      await assertTextFits(slip.locator('.side-choice label'));
+      await assertTextFits(slip.locator('button[type="submit"]'));
+      await slip.getByRole('radio',{name:`Over ${line} 1.67x`,exact:true}).focus();
+      await page.keyboard.press('ArrowRight');
+      assert.ok(await slip.getByRole('radio',{name:`Under ${line} 2.50x`,exact:true}).isChecked());
+      assert.ok(await slip.getByRole('button',{name:`Bet Under ${line}`,exact:true}).isVisible());
+      await assertNoScroll(slip);
+      if (width===390) await page.screenshot({path:`${shots}/long-line-slip-390.png`});
+      await page.keyboard.press('Escape'); await noOverflow(page);
+      await context.close();
+    }
+  });
+  await test('Connect, connected and wrong-network headers fit across responsive breakpoints', async () => {
+    for (const width of [320,375,390,420,421,760,761,768,800,820,850,851,876,900,901,1440]) {
+      resetFixtures(); const {page,context}=await fixturePage({width,height:844});
+      await page.waitForTimeout(600);
+      await noOverflow(page); await assertInViewport(page.locator('.wallet-button'));
+      await page.getByRole('button',{name:/^Connect( wallet)?$/}).click();
+      await page.getByRole('button',{name:/Test Browser Wallet/}).click();
+      await page.getByRole('button',{name:/0x1234…7890/}).waitFor();
+      await noOverflow(page); await assertInViewport(page.locator('.wallet-button'));
+      await page.evaluate(()=>window.setTestChain('0x1'));
+      const action=page.getByRole('button',{name:'Switch to Sepolia'}); await action.waitFor();
+      await page.waitForTimeout(200); // Allow the connected claim badge to arrive from RPC.
+      await noOverflow(page); await assertInViewport(action); await assertTextFits(action);
+      assert.ok(await page.getByRole('link',{name:'Squeek Predict home'}).isVisible());
+      if (width===390) await page.screenshot({path:`${shots}/wrong-network-390.png`});
+      await action.click(); await page.getByRole('button',{name:/0x1234…7890/}).waitFor();
+      assert.equal(transactions.length,0);
+      await context.close();
+    }
+  });
+  await test('Incomplete history never becomes zero stats; retry restores certified values', async () => {
+    for (const mode of ['partial','interior','uncertified']) {
+      resetFixtures(); historyMode=mode;
+      const {page,context}=await fixturePage({width:390,height:844});
+      const retry=page.getByRole('button',{name:'Retry wheel stats'});
+      await retry.waitFor({timeout:30000});
+      assert.equal(await page.locator('.window-grid, .fact-list, .live-line').count(),0);
+      assert.equal(await page.locator('.pulse strong').innerText(),'Wheel stats unavailable');
+      if(mode==='partial') await page.locator('.wheel-panel').screenshot({path:`${shots}/history-error.png`});
+      historyMode='complete'; await retry.click();
+      await page.locator('.window-grid dd').first().waitFor({timeout:30000});
+      assert.deepEqual(await page.locator('.window-grid dd').allTextContents(), ['18','54','108','216','432','3,024']);
+      assert.match(await page.locator('.live-line').innerText(),/Blocks completed in the last certified hour/);
+      assert.equal(await page.getByRole('button',{name:'Retry wheel stats'}).count(),0);
+      await context.close();
+    }
+  });
+  await test('Known pre-genesis history stays zero without masking missing certified endpoints', async () => {
+    resetFixtures(); settledRound=180n;
+    const {page,context}=await fixturePage();
+    await page.locator('.window-grid dd').first().waitFor();
+    assert.deepEqual(await page.locator('.window-grid dd').allTextContents(), ['18','54','108','216','432','540']);
+    assert.equal(await page.getByRole('button',{name:'Retry wheel stats'}).count(),0);
+    await context.close();
+  });
+  await test('Partial-block work and threshold-zero wagers use block-completion wording', async () => {
+    resetFixtures(); historyMode='fractional'; markets[1].threshold=0n; markets[2].threshold=0n;
+    markets[4]={...markets[4],threshold:0n,yesWins:false,startBlockUnits:100000000n,endBlockUnits:500000000n};
+    const {page,context}=await fixturePage({width:390,height:844});
+    await page.locator('.window-grid dd').first().waitFor();
+    const card=page.locator('article.market-card').filter({hasText:'#1'});
+    assert.equal(await card.locator('.question-button').innerText(),'Will the hamster complete a block in this 24-hour window?');
+    assert.deepEqual(await card.locator('.odds-side').allTextContents(),['At least one block','No blocks']);
+    assert.match(await page.locator('article.market-card').filter({hasText:'#2'}).innerText(),/complete a block in this 7-day window/);
+    assert.match(await page.locator('article.market-card').filter({hasText:'#4'}).innerText(),/No blocks won with 0 blocks/);
+    assert.deepEqual(await page.locator('.window-grid dd').allTextContents(),['0','0','0','0','0','0']);
+    assert.equal(await page.locator('.pulse strong').innerText(),'No blocks in last certified hour');
+    assert.match(await page.locator('.live-line').innerText(),/No blocks completed in the last certified hour/);
+    assert.match(await page.locator('.fact-list').innerText(),/Rounds with blocks, 24h\s+0 of 144/);
+    assert.match(await page.locator('.wheel-panel').innerText(),/does not measure continuous running/);
+    assert.doesNotMatch(await page.locator('.wheel-panel').innerText(),/Resting|Active rounds|Longest run/);
+    await card.locator('.odds-no').click(); const slip=page.getByRole('dialog',{name:'Bet slip'});
+    assert.ok(await slip.getByRole('radio',{name:/No blocks/}).isChecked()); await assertNoScroll(slip);
+    await page.keyboard.press('Escape');
+    await page.getByRole('button',{name:/Wake-up call/}).click();
+    const create=page.getByRole('dialog',{name:'Create a market'});
+    assert.equal(await create.getByLabel('Line: more than this many Squeek blocks').inputValue(),'0');
+    assert.match(await create.locator('#line-help').innerText(),/At least one block or No blocks/);
+    await page.keyboard.press('Escape');
+    await page.locator('.wheel-panel').screenshot({path:`${shots}/partial-block-stats.png`});
+    await noOverflow(page); await context.close();
   });
   await test('Phone wallet sheet offers Open in links and Coinbase Smart Wallet', async () => {
     resetFixtures(); const {page,context}=await fixturePage({width:390,height:844},true);

@@ -65,7 +65,7 @@ export default function App() {
     const week = stats?.total7d ?? 7000;
     const list: (Preset & { name: string; note: string; icon: IconName })[] = [
       { name: 'Daily line', note: `Over or under ${line(BigInt(round10(avg)))} blocks in 24 hours`, threshold: String(round10(avg)), duration: DAY, icon: 'wheel' },
-      { name: 'Wake-up call', note: 'Will the hamster run at all in 24 hours?', threshold: '0', duration: DAY, icon: 'bolt' },
+      { name: 'Wake-up call', note: 'Will the hamster complete a block in 24 hours?', threshold: '0', duration: DAY, icon: 'bolt' },
       { name: 'Record attempt', note: `Beat this week’s best day of ${best.toLocaleString()} blocks`, threshold: String(best), duration: DAY, icon: 'trophy' },
       { name: 'Night shift', note: '24 hours from 18:00, line set above average', threshold: String(round10(avg * 1.25)), duration: DAY, start: 'evening', icon: 'moon' },
       { name: 'Weekly line', note: `Over or under ${line(BigInt(Math.max(50, Math.round(week / 50) * 50)))} blocks in 7 days`, threshold: String(Math.max(50, Math.round(week / 50) * 50)), duration: WEEK, icon: 'chart' },

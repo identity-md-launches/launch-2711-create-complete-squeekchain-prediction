@@ -86,11 +86,11 @@ export function kind(m: Pick<Market, 'threshold' | 'startsAt' | 'endsAt'>, best2
 export const line = (threshold: bigint) => `${threshold.toLocaleString()}.5`;
 export function title(m: Pick<Market, 'threshold' | 'startsAt' | 'endsAt'>, best24?: number) {
   const k = kind(m, best24);
-  if (k === 'Activity') return 'Will the hamster run in this 24-hour window?';
+  if (m.threshold === 0n) return `Will the hamster complete a block in this ${durationName(m) === '24 hours' ? '24-hour' : '7-day'} window?`;
   if (k === 'Record attempt') return `Record attempt: over ${line(m.threshold)} blocks in 24 hours`;
   return `Squeek blocks in ${durationName(m)}: over or under ${line(m.threshold)}`;
 }
-export const sideName = (m: Pick<Market, 'threshold'>, yes: boolean) => m.threshold === 0n ? (yes ? 'Runs' : 'Rests') : `${yes ? 'Over' : 'Under'} ${line(m.threshold)}`;
+export const sideName = (m: Pick<Market, 'threshold'>, yes: boolean) => m.threshold === 0n ? (yes ? 'At least one block' : 'No blocks') : `${yes ? 'Over' : 'Under'} ${line(m.threshold)}`;
 /** Current pari-mutuel multiplier for a side: total pool divided by that side's pool. */
 export function odds(m: Pick<Market, 'yesPool' | 'noPool'>, yes: boolean): number | null {
   const side = yes ? m.yesPool : m.noPool;

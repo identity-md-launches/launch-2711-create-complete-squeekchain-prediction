@@ -32,6 +32,26 @@
     "passed": true
   },
   {
+    "name": "Full uint64 lines fit cards and connected slips at phone and desktop widths",
+    "passed": true
+  },
+  {
+    "name": "Connect, connected and wrong-network headers fit across responsive breakpoints",
+    "passed": true
+  },
+  {
+    "name": "Incomplete history never becomes zero stats; retry restores certified values",
+    "passed": true
+  },
+  {
+    "name": "Known pre-genesis history stays zero without masking missing certified endpoints",
+    "passed": true
+  },
+  {
+    "name": "Partial-block work and threshold-zero wagers use block-completion wording",
+    "passed": true
+  },
+  {
     "name": "Phone wallet sheet offers Open in links and Coinbase Smart Wallet",
     "passed": true
   },
