@@ -24,7 +24,7 @@ export function Wallet({ open, setOpen }: { open: boolean; setOpen: (value: bool
     try { await switchChain({ chainId: chain.id }); } catch (e) { setError(friendlyError(e)); setAccountOpen(true); }
   }
   return <>
-    <button className="wallet-button" onClick={() => { setError(''); if (wrong) void switchNetwork(); else if (isConnected) setAccountOpen(true); else setOpen(true); }}>
+    <button className={`wallet-button ${isConnected ? 'is-connected' : ''}`} onClick={() => { setError(''); if (wrong) void switchNetwork(); else if (isConnected) setAccountOpen(true); else setOpen(true); }}>
       <Icon name="wallet" size={18}/><span>{switching ? 'Switching…' : wrong ? 'Switch to Sepolia' : address ? shortAddress(address) : <>Connect<span className="wide-only"> wallet</span></>}</span>
     </button>
     {open && !isConnected && <Modal title="Connect a wallet" onClose={() => setOpen(false)} className="wallet-modal">

@@ -36,7 +36,7 @@
     "passed": true
   },
   {
-    "name": "My bets: one-tap claim and resolve flow",
+    "name": "My positions: one-tap claim and resolve flow",
     "passed": true
   },
   {
@@ -56,7 +56,7 @@
     "passed": true
   },
   {
-    "name": "First phone screen shows a complete hamster question and its answer buttons",
+    "name": "First phone screen shows a complete on-chain question and both betting buttons",
     "passed": true
   },
   {
@@ -69,6 +69,30 @@
   },
   {
     "name": "Partial-block work and threshold-zero wagers use block-completion wording",
+    "passed": true
+  },
+  {
+    "name": "Empty pools start at 50/50 and percentages update after confirmed bets",
+    "passed": true
+  },
+  {
+    "name": "Connect during a bet preserves side and custom stake; rejection is recoverable",
+    "passed": true
+  },
+  {
+    "name": "Zero live markets gives an actionable first screen and preserves creation through connect",
+    "passed": true
+  },
+  {
+    "name": "Keyboard bet entry, visible focus, modal focus trap and focus return",
+    "passed": true
+  },
+  {
+    "name": "My positions navigation returns to the top and focuses the new view",
+    "passed": true
+  },
+  {
+    "name": "Wrong-network bet is disabled, wallet switching recovers and account changes close the slip",
     "passed": true
   },
   {

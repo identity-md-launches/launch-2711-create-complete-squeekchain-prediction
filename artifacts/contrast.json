@@ -1,0 +1,38 @@
+[
+  {
+    "selector": ".question-button",
+    "foreground": "rgb(24, 35, 56)",
+    "background": "rgb(255, 255, 255)",
+    "ratio": 15.71
+  },
+  {
+    "selector": ".card-foot",
+    "foreground": "rgb(96, 109, 129)",
+    "background": "rgb(255, 255, 255)",
+    "ratio": 5.25
+  },
+  {
+    "selector": ".odds-yes .odds-price",
+    "foreground": "rgb(8, 115, 75)",
+    "background": "rgb(232, 246, 238)",
+    "ratio": 5.29
+  },
+  {
+    "selector": ".odds-no .odds-price",
+    "foreground": "rgb(180, 60, 72)",
+    "background": "rgb(253, 240, 240)",
+    "ratio": 5.13
+  },
+  {
+    "selector": ".wallet-button",
+    "foreground": "rgb(255, 255, 255)",
+    "background": "rgb(43, 87, 217)",
+    "ratio": 6.06
+  },
+  {
+    "selector": ".chip.active",
+    "foreground": "rgb(43, 87, 217)",
+    "background": "rgb(237, 242, 255)",
+    "ratio": 5.41
+  }
+]

@@ -13,7 +13,7 @@ import { Modal } from './Modal';
 import { MarketCard, SkeletonCard } from './MarketCard';
 import { MarketDialog, TransactionNotice, type TxState } from './MarketDialog';
 import { CreateDialog, type Preset } from './CreateDialog';
-import { WheelPanel, WheelPulse } from './WheelPanel';
+import { WheelPanel } from './WheelPanel';
 import { usePastWeeks, useWheelStats } from './useStats';
 import { CommunityMarkets, useCalls } from './CommunityMarkets';
 import { HistoryPanel } from './HistoryPanel';
@@ -22,7 +22,7 @@ import { GROUPS, type Group } from './hamster';
 
 const HERO_IMAGE = './hamster-neon-wheel.svg';
 const CREDITS = ['squeektoshi', 'pillheadddd', 'le_chien65760'];
-const anchors = ['#wheel', '#history', '#community', '#hamster', '#live', '#board'];
+const anchors = ['#main', '#wheel', '#history', '#community', '#hamster', '#live', '#board'];
 type Category = Group | 'all' | 'founder';
 const CATEGORIES: [Category, string][] = [['all', 'All markets'], ...GROUPS.map(g => [g.id, g.label] as [Category, string]), ['founder', 'Founder & NFT']];
 
@@ -46,7 +46,7 @@ export default function App() {
   const [lookupError, setLookupError] = useState('');
   const [walletOpen, setWalletOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
-  const [selected, setSelected] = useState<{ id: bigint; yes?: boolean }>();
+  const [selected, setSelected] = useState<{ id: bigint; yes?: boolean; market: Market }>();
   const [creation, setCreation] = useState<Preset>();
   const [tx, setTx] = useState<TxState>(idleTx);
   const [claiming, setClaiming] = useState<bigint>();
@@ -70,11 +70,20 @@ export default function App() {
   const dailyAverage = stats?.average24 ?? launchAverage;
   useEffect(() => { const timer = setInterval(() => setTick(Date.now()), 1000); return () => clearInterval(timer); }, []);
   useEffect(() => {
-    const onHash = () => { if (anchors.includes(location.hash)) return; setTab(tabFromHash()); setFilter('all'); };
+    const onHash = () => {
+      if (anchors.includes(location.hash)) return;
+      setTab(tabFromHash()); setFilter('all');
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      document.getElementById('main')?.focus({ preventScroll: true });
+    };
     addEventListener('hashchange', onHash); return () => removeEventListener('hashchange', onHash);
   }, []);
   useEffect(() => { if (isConnected) setWalletOpen(false); }, [isConnected]);
-  useEffect(() => { setSelected(undefined); setCreation(undefined); }, [address]);
+  const previousAddress = useRef(address);
+  useEffect(() => {
+    if (previousAddress.current && previousAddress.current !== address) { setSelected(undefined); setCreation(undefined); resetTx(); }
+    previousAddress.current = address;
+  }, [address]);
 
   const templates = useMemo(() => {
     const avg = dailyAverage ?? 1000;
@@ -92,7 +101,7 @@ export default function App() {
   }, [stats, dailyAverage]);
 
   function resetTx() { if (!lock.current) setTx(idleTx); }
-  function openMarket(m: Market, yes?: boolean) { resetTx(); setSelected({ id: m.id, yes }); }
+  function openMarket(m: Market, yes?: boolean) { resetTx(); setSelected({ id: m.id, yes, market: m }); }
   function openCreate(preset: Preset = templates[0]) { resetTx(); setCreation(preset); }
   async function transact(action: Action, success: string): Promise<boolean> {
     if (lock.current || !address || chainId !== chain.id || !ready) return false;
@@ -161,56 +170,50 @@ export default function App() {
   const claimableTotal = positions.reduce((sum, p) => sum + p.claimable, 0n);
   const stakedTotal = positions.reduce((sum, p) => sum + p.yes + p.no, 0n);
   const toClaim = markets.filter(m => (positionOf(m)?.claimable ?? 0n) > 0n);
-  const selectedMarket = markets.find(m => m.id === selected?.id);
+  const selectedMarket = markets.find(m => m.id === selected?.id) ?? selected?.market;
   const nextLine: Preset = { ...templates[0], start: 'soon' };
   const resetFilters = () => { setFilter('all'); setDurationFilter('all'); setKindFilter('all'); setSearch(''); };
   const nowSeconds = Number(now);
-  const statusFilters = tab === 'markets' ? [['all', 'All'], ['open', 'Open'], ['live', 'In play'], ['settled', 'Settled']] : [['all', 'All bets'], ['claimable', 'To claim'], ['open', 'Open'], ['settled', 'Settled']];
+  const statusFilters = tab === 'markets' ? [['all', 'All'], ['open', 'Open'], ['live', 'In play'], ['settled', 'Settled']] : [['all', 'All positions'], ['claimable', 'To claim'], ['open', 'Open'], ['settled', 'Settled']];
 
   return <>
-    <a className="skip-link" href="#main">Skip to markets</a>
+    <a className="skip-link" href="#main">Skip to content</a>
     <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">{tx.stage === 'error' ? '' : tx.message}</div>
     <header className="site-header"><div className="header-inner">
       <a className="brand" href="#markets" aria-label="Squeek Predict home"><img src="./favicon.svg" width="34" height="34" alt=""/><span>Squeek <span className="brand-accent">Predict</span></span></a>
       <nav className="main-nav" aria-label="Main navigation">
         <a href="#markets" aria-current={tab === 'markets' ? 'page' : undefined}>Markets</a>
-        <a href="#positions" aria-current={tab === 'positions' ? 'page' : undefined}>My bets{claimableTotal > 0n && <span className="nav-badge" aria-label="winnings to claim">{toClaim.length}</span>}</a>
-        <a href="#wheel">Wheel form</a>
+        <a href="#positions" aria-current={tab === 'positions' ? 'page' : undefined}>My positions{claimableTotal > 0n && <span className="nav-badge" aria-label="winnings to claim">{toClaim.length}</span>}</a>
+        <a href="#wheel">Wheel activity</a>
         <a href="#history">Stats</a>
       </nav>
       <div className="header-actions"><button className="ghost help-button" onClick={() => setHelpOpen(true)} aria-label="How it works"><Icon name="info" size={18}/><span>How it works</span></button><Wallet open={walletOpen} setOpen={setWalletOpen}/></div>
     </div></header>
 
     <main id="main" className="page" tabIndex={-1}>
-      <section className="hero" aria-labelledby="hero-title">
+      <section className={`hero ${tab === 'positions' ? 'positions-hero' : ''}`} aria-labelledby="hero-title">
         <div className="hero-copy">
-          <h1 id="hero-title">Squeek Predict</h1>
-          <p className="lead">Bet test ETH on how many blocks the Squeekchain hamster runs, settled on-chain.</p>
-          <div className="hero-actions">
-            <a className="button primary" href="#board">Bet on a market<Icon name="arrow" size={18}/></a>
-            <button className="secondary" onClick={() => openCreate()} disabled={busy}><Icon name="plus" size={18}/>Create market</button>
-          </div>
+          <h1 id="hero-title">{tab === 'markets' ? 'Squeek Predict' : 'My positions'}</h1>
+          <p className="lead">{tab === 'markets' ? 'Bet on the hamster’s Squeek blocks. Sepolia test ETH only.' : 'Keep track of your stakes, results and winnings.'}</p>
+          {tab === 'markets' && <div className="hero-actions">
+            <button className="secondary" onClick={() => openCreate()} disabled={busy}><Icon name="plus" size={17}/>Create market</button>
+            <button className="ghost" onClick={() => setHelpOpen(true)}>How it works<Icon name="arrow" size={17}/></button>
+          </div>}
         </div>
-        <img className="hero-art" src={HERO_IMAGE} width="300" height="260" alt="A hamster running on a glowing neon wheel"/>
-        <WheelPulse stats={stats} height={data?.coreState?.blockHeight} loading={statsQuery.isLoading || query.isPending} now={nowSeconds}/>
+        {tab === 'markets' && <img className="hero-art" src={HERO_IMAGE} width="300" height="260" alt="A hamster running on a glowing neon wheel"/>}
+        <div className="hero-network"><span className="status-dot"/>Sepolia testnet</div>
       </section>
 
       <div className="tabbar" role="navigation" aria-label="Sections">
         <a href="#markets" aria-current={tab === 'markets' ? 'page' : undefined}>Markets</a>
-        <a href="#positions" aria-current={tab === 'positions' ? 'page' : undefined}>My bets{toClaim.length > 0 && <span className="num"> ({toClaim.length})</span>}</a>
+        <a href="#positions" aria-current={tab === 'positions' ? 'page' : undefined}>My positions{toClaim.length > 0 && <span className="num"> ({toClaim.length})</span>}</a>
         <a href="#history">Stats</a>
       </div>
 
       <div className="layout">
         <div className="board" id="board" tabIndex={-1}>
-          {tab === 'markets' && <>
-            <div className="chip-row category-row" role="group" aria-label="Market category">{CATEGORIES.map(([value, label]) => <button key={value} className={category === value ? 'chip active' : 'chip'} aria-pressed={category === value} onClick={() => setCategory(value)}>{label}</button>)}</div>
-            {category !== 'founder' && <HamsterMarkets group={category} now={now} dailyAverage={dailyAverage} best24={best24} total7d={stats?.total7d} statsError={statsQuery.isError} markets={markets} statusOf={statusOf} busy={busy} calls={hamster.calls} choose={hamster.choose} onBet={openMarket} onCreate={openCreate} onRetryStats={() => void statsQuery.refetch()}/>}
-            {category !== 'founder' && <div className="custom-line"><p className="muted small">Want a different line or start time?</p><button className="secondary" onClick={() => openCreate(templates[5])} disabled={busy}><Icon name="plus" size={18}/>Set your own line</button></div>}
-            {(category === 'all' || category === 'founder') && <CommunityMarkets now={nowSeconds} calls={calls} choose={choose}/>}
-          </>}
-          <div className={`board-head ${tab === 'markets' ? 'live-head' : ''}`} id="live" tabIndex={-1}>
-            <div><h2>{tab === 'markets' ? 'All on-chain markets' : 'My bets'}</h2><p className="muted small">{tab === 'markets' ? data ? `${openCount} open · ${eth(totalPool)} ETH in pools` : 'Reading SqueekPredict on Sepolia' : 'Your stakes, results and payouts'}</p></div>
+          <div className="board-head" id="live" tabIndex={-1}>
+            <div><h2>{tab === 'markets' ? 'Markets' : 'Your on-chain positions'}</h2><p className="muted small">{tab === 'markets' ? data ? `${query.isError ? 'Last read · ' : ''}${openCount} open · ${eth(totalPool)} test ETH volume` : query.isError ? 'Market data unavailable' : 'Reading SqueekPredict on Sepolia' : 'Positions in the loaded markets · load older markets below'}</p></div>
             <button className="icon-button refresh" onClick={() => { void query.refetch(); void statsQuery.refetch(); void weeksQuery.refetch(); }} disabled={query.isFetching} aria-label="Refresh markets"><Icon name="refresh" size={18} className={query.isFetching ? 'spin-once' : ''}/></button>
           </div>
 
@@ -227,32 +230,48 @@ export default function App() {
           <div className="filters">
             <div className="chip-row" role="group" aria-label="Market status">{statusFilters.map(([value, label]) => <button key={value} className={filter === value ? 'chip active' : 'chip'} aria-pressed={filter === value} onClick={() => setFilter(value)}>{label}</button>)}</div>
             <div className="filter-tools">
-              <label className="search-field"><Icon name="search" size={17}/><input type="search" aria-label="Search by line or market number" placeholder="Search line or #" value={search} onChange={e => setSearch(e.target.value)}/></label>
+              <label className="search-field"><Icon name="search" size={17}/><input type="search" aria-label="Search by line or market number" placeholder="Search markets" value={search} onChange={e => setSearch(e.target.value)}/></label>
+              <select aria-label="Sort markets" value={sort} onChange={e => setSort(e.target.value)}><option value="closing">Soonest</option><option value="pool">Volume</option><option value="newest">Newest</option></select>
               <select aria-label="Window length" value={durationFilter} onChange={e => setDurationFilter(e.target.value)}><option value="all">Any length</option><option value={DAY}>24 hours</option><option value={WEEK}>7 days</option></select>
               <select aria-label="Market type" value={kindFilter} onChange={e => setKindFilter(e.target.value)}><option value="all">All types</option>{KINDS.map(k => <option key={k} value={k}>{k}</option>)}</select>
-              <select aria-label="Sort markets" value={sort} onChange={e => setSort(e.target.value)}><option value="closing">Closing soon</option><option value="pool">Biggest pool</option><option value="newest">Newest</option></select>
             </div>
           </div>
 
           {tx.stage !== 'idle' && !selected && !creation && <TransactionNotice tx={tx}/>}
           {tab === 'markets' && data && !query.isError && markets.length > 0 && openCount === 0 && <div className="notice next-up" role="status"><Icon name="clock"/><div><strong>Every listed window has closed</strong><p className="small muted">Ended markets settle below. Open the next {nextLine.duration === DAY ? '24-hour' : '7-day'} window at Over {line(BigInt(nextLine.threshold))}.</p></div><button className="primary" onClick={() => openCreate(nextLine)} disabled={busy}>Open next market</button></div>}
-          {query.isError && <div className="notice" role="status"><Icon name="info"/><div><strong>{query.error instanceof Error && query.error.message.includes('verification failed') ? 'Contract verification failed' : 'Couldn’t load fresh market data'}</strong><p className="small muted">{data ? 'Showing the last successful read.' : 'Sepolia is not answering right now.'} Retry, or explore market ideas below.</p></div><button className="secondary" onClick={() => void query.refetch()} disabled={query.isFetching}>{query.isFetching ? 'Retrying…' : 'Retry'}</button></div>}
+          {query.isError && <div className="notice" role="status"><Icon name="info"/><div><strong>{query.error instanceof Error && query.error.message.includes('verification failed') ? 'Contract verification failed' : 'Couldn’t load fresh market data'}</strong><p className="small muted">{data ? 'Showing the last successful read.' : 'Sepolia is not answering right now.'} Retry to enable betting. You can still explore the free calls below.</p></div><button className="secondary" onClick={() => void query.refetch()} disabled={query.isFetching}>{query.isFetching ? 'Retrying…' : 'Retry'}</button></div>}
 
-          {tab === 'positions' && !address ? <section className="empty"><div className="empty-icon"><Icon name="ticket" size={28}/></div><h3>Your bets live here.</h3><p className="muted">Connect a wallet to see stakes, results and payouts.</p><button className="primary" onClick={() => setWalletOpen(true)}>Connect wallet<Icon name="arrow" size={18}/></button></section>
+          {tab === 'positions' && !address ? <section className="empty"><div className="empty-icon"><Icon name="ticket" size={28}/></div><h3>Your positions, all in one place</h3><p className="muted">Connect a wallet to see stakes, results and payouts.</p><button className="primary" onClick={() => setWalletOpen(true)}>Connect wallet<Icon name="arrow" size={18}/></button></section>
             : query.isPending ? <div className="market-grid" role="status" aria-label="Loading markets"><SkeletonCard/><SkeletonCard/><SkeletonCard/><span className="sr-only">Reading prediction markets…</span></div>
             : visible.length > 0 ? <div className="market-grid">{visible.map(m => <MarketCard key={String(m.id)} market={m} position={positionOf(m)} now={now} settled={settled} best24={best24} onOpen={openMarket}/>)}</div>
             : data ? <section className="empty"><div className="empty-icon"><Icon name={tab === 'positions' ? 'ticket' : 'wheel'} size={28}/></div>
-              <h3>{filtering ? 'No markets match' : tab === 'positions' ? 'No bets yet' : 'No markets yet. Open the first line.'}</h3>
-              <p className="muted">{filtering ? 'Try another line or clear the filters.' : tab === 'positions' ? 'Pick a market and take a side.' : 'Pick a market idea below or set your own line.'}</p>
+              <h3>{filtering ? 'No markets match' : tab === 'positions' ? 'No positions yet' : 'Start the first prediction'}</h3>
+              <p className="muted">{filtering ? 'Try another line or clear the filters.' : tab === 'positions' ? 'Choose a market and take a side to start tracking your positions.' : 'Choose a block target and open a 24-hour or 7-day market.'}</p>
               {filtering ? <button className="secondary" onClick={resetFilters}>Clear filters</button> : tab === 'positions' ? <a className="button secondary" href="#markets">Browse markets<Icon name="arrow" size={18}/></a> : <button className="primary" onClick={() => openCreate()}>Create market<Icon name="arrow" size={18}/></button>}
             </section> : null}
 
           {data && data.count > BigInt(Math.min(limit, markets.length)) && <div className="load-more"><button className="secondary" onClick={() => setLimit(n => n + 30)} disabled={query.isFetching}>{query.isFetching ? 'Loading…' : 'Load older markets'}</button><span className="small muted">{Math.min(limit, markets.length)} of {String(data.count)} loaded</span></div>}
 
           <details className="find-market"><summary>Find an older market by number</summary><form onSubmit={e => { e.preventDefault(); setLookupError(''); try { const id = thresholdValue(lookupText); if (id < 1n || data && id > data.count) throw new Error('Enter an existing market number, starting at 1.'); setLookup(id); setSearch(lookupText); location.hash = 'markets'; setTab('markets'); setFilter('all'); setDurationFilter('all'); setKindFilter('all'); } catch (error) { setLookupError((error as Error).message); } }}><label htmlFor="market-id" className="field-label">Market number</label><div className="find-controls"><input className="text-input" id="market-id" name="market-id" inputMode="numeric" value={lookupText} onChange={e => setLookupText(e.target.value)} placeholder="e.g. 1" aria-describedby="lookup-error" aria-invalid={Boolean(lookupError)}/><button type="submit" className="secondary">Find</button></div><p id="lookup-error" role="alert" className="inline-error">{lookupError}</p></form></details>
+          {tab === 'markets' && <p className="odds-note small muted"><Icon name="info" size={15}/>Percentages show pool share, not a guaranteed outcome. Empty markets start at 50/50.</p>}
+          {tab === 'markets' && <>
+            <div className="explore-head"><h2>Explore more predictions</h2><p className="small muted">Open a new market or make a free call saved in this browser.</p></div>
+            <div className="chip-row category-row" role="group" aria-label="Market category">{CATEGORIES.map(([value, label]) => <button key={value} className={category === value ? 'chip active' : 'chip'} aria-pressed={category === value} onClick={() => setCategory(value)}>{label}</button>)}</div>
+            {category !== 'founder' && <HamsterMarkets group={category} now={now} dailyAverage={dailyAverage} best24={best24} total7d={stats?.total7d} statsError={statsQuery.isError} markets={markets} statusOf={statusOf} busy={busy} calls={hamster.calls} choose={hamster.choose} onBet={openMarket} onCreate={openCreate} onRetryStats={() => void statsQuery.refetch()}/>}
+            {category !== 'founder' && <div className="custom-line"><p className="muted small">Want a different line or start time?</p><button className="secondary" onClick={() => openCreate(templates[5])} disabled={busy}><Icon name="plus" size={18}/>Set your own line</button></div>}
+            {(category === 'all' || category === 'founder') && <CommunityMarkets now={nowSeconds} calls={calls} choose={choose}/>}
+          </>}
         </div>
 
-        <aside className="side">
+        <aside className="side" aria-label="Positions and wheel activity">
+          <section className="positions-preview" aria-labelledby="positions-preview-title">
+            <div className="positions-preview-head"><Icon name="ticket" size={20}/><h2 id="positions-preview-title">My positions</h2></div>
+            {address ? <>
+              <dl className="position-totals"><div><dt>Total staked</dt><dd className="num">{data ? `${eth(stakedTotal)} ETH` : 'Loading…'}</dd></div><div><dt>Ready to claim</dt><dd className="num gain">{data ? `${eth(claimableTotal)} ETH` : 'Loading…'}</dd></div></dl>
+              <p className="small muted">In loaded markets{query.isError ? ' · last read unavailable' : ''}.</p>
+            </> : <p className="muted small">Your stakes and winnings in one place. Connect a wallet to get started.</p>}
+            <a className="button secondary full" href="#positions">View my positions<Icon name="arrow" size={16}/></a>
+          </section>
           <WheelPanel stats={stats} error={statsQuery.isError} loading={statsQuery.isLoading || query.isPending} height={data?.coreState?.blockHeight} now={nowSeconds} onRetry={() => void statsQuery.refetch()}/>
           <div className="chain-status small"><span className={`status-dot ${ready ? 'ok' : query.isError ? 'bad' : ''}`}/>{query.isError ? data ? 'Connection interrupted, showing last read' : 'Sepolia unavailable' : data ? <>Sepolia block <span className="num">{data.blockNumber.toLocaleString()}</span>, refreshes every 30s</> : 'Connecting to Sepolia…'}</div>
         </aside>
@@ -271,8 +290,8 @@ export default function App() {
     {helpOpen && <Modal title="How Squeek Predict works" onClose={() => setHelpOpen(false)}><ol className="help-steps">
       <li><h3>Pick a line</h3><p className="muted">Each market asks whether the hamster completes more than a set number of Squeek blocks in a 24-hour or 7-day window. Over 1,000.5 means 1,001 or more; exactly 1,000 settles as under.</p></li>
       <li><h3>Take a side</h3><p className="muted">Stake Sepolia test ETH before the window starts. Minimum 0.0001 ETH, up to 100 ETH per side. Bets are final.</p></li>
-      <li><h3>Read the odds</h3><p className="muted">Odds are pool-based: total pool divided by your side’s pool. They move as people bet and lock when the window starts. No platform fee.</p></li>
-      <li><h3>Settle and claim</h3><p className="muted">Once SqueekCore certifies the window, anyone can resolve it. Winners claim from My bets. One-sided markets, and markets unresolved 30 days after the window, are refunded.</p></li>
+      <li><h3>Read the odds</h3><p className="muted">Each side shows its share of the staked test ETH. Empty markets start at 50/50; percentages update as bets come in. These are pool shares, not guaranteed probabilities. Winners share the pool. No platform fee.</p></li>
+      <li><h3>Settle and claim</h3><p className="muted">Once SqueekCore certifies the window, anyone can resolve it. Winners claim from My positions. One-sided markets, and markets unresolved 30 days after the window, are refunded.</p></li>
     </ol><p className="small muted">Certification can run days behind real time, so results can take a while. Use test ETH only; gas applies to every action.</p><button className="primary full" onClick={() => setHelpOpen(false)}>Got it</button></Modal>}
   </>;
 }

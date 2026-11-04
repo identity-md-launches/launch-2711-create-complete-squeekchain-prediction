@@ -49,12 +49,12 @@ export function CreateDialog({ preset, snapshot, now, ready, tx, transact, onClo
   } catch (e) { startError = (e as Error).message; }
   let count: bigint | undefined;
   try { count = thresholdValue(threshold); } catch { /* Shown on submit. */ }
-  const step = (delta: number) => { const next = Math.max(0, Number(count ?? 0n) + delta); setThreshold(String(next)); setError(''); onReset(); };
+  const step = (delta: number) => { const next = (count ?? 0n) + BigInt(delta); const max = (1n << 64n) - 1n; setThreshold(String(next < 0n ? 0n : next > max ? max : next)); setError(''); onReset(); };
   async function submit(e: React.FormEvent) {
     e.preventDefault(); setError(''); onReset();
     try {
       const value = thresholdValue(threshold);
-      if (!address) { onClose(); onConnect(); return; }
+      if (!address) { onConnect(); return; }
       if (round === undefined || start === undefined) throw new Error('Refresh chain data before creating a market.');
       if (startError) throw new Error(startError);
       await transact({ functionName: 'createMarket', args: [value, round, BigInt(duration)] }, 'Your market is live. It is at the top of the market list.');

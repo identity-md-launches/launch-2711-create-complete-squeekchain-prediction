@@ -1,9 +1,9 @@
-import { useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { getAddress, isAddress, type Address, type Hash } from 'viem';
 import { useConnection } from 'wagmi';
 import { Modal } from './Modal';
 import { Icon } from './icons';
-import { amount, date, eth, exactEth, formatOdds, MAX_POOL, odds, payout, phase, sideName, title, type Market, type Position } from './model';
+import { amount, date, eth, exactEth, formatOdds, MAX_POOL, odds, payout, percentLabel, phase, poolPercent, sideName, timeLeft, title, type Market, type Position } from './model';
 import { PREDICT_ADDRESS, EXPLORER, chain } from './config';
 import type { Action } from './data';
 export type TxState = { stage: 'idle' | 'checking' | 'wallet' | 'pending' | 'success' | 'error'; message: string; hash?: Hash };
@@ -20,6 +20,7 @@ export function MarketDialog({ market: m, position: p, yes: initialYes, now, set
   const [stake, setStake] = useState('0.001');
   const [error, setError] = useState('');
   const [recipient, setRecipient] = useState(address ?? '');
+  useEffect(() => { if (address) setRecipient(address); }, [address]);
   const field = useRef<HTMLInputElement>(null);
   const recipientField = useRef<HTMLInputElement>(null);
   const status = phase(m, now, settled);
@@ -28,7 +29,7 @@ export function MarketDialog({ market: m, position: p, yes: initialYes, now, set
   let value = 0n;
   try { value = amount(stake); } catch { /* Validate visibly on submission. */ }
   const estimate = value > 0n ? payout(m, yes, value, yes ? p?.yes ?? 0n : p?.no ?? 0n) : null;
-  const connect = () => { onClose(); onConnect(); };
+  const connect = () => onConnect();
   async function submit(e: React.FormEvent) {
     e.preventDefault(); setError(''); onReset();
     try {
@@ -46,17 +47,15 @@ export function MarketDialog({ market: m, position: p, yes: initialYes, now, set
   return <Modal title={open ? 'Bet slip' : 'Market details'} onClose={onClose} className="sheet">
     <div className="dialog-market-meta"><span>{status}</span><span>Market #{m.id}</span></div>
     <h3 className="dialog-question">{title(m, best24)}</h3>
-    <p className="small muted">Certified Squeek blocks from SqueekCore. Exactly {m.threshold.toLocaleString()} blocks settles as {sideName(m, false)}.</p>
-    <dl className="market-facts"><div><dt>Window starts</dt><dd>{date(m.startsAt)}</dd></div><div><dt>Window ends</dt><dd>{date(m.endsAt)}</dd></div></dl>
-    <div className="dialog-pools"><div><span>{sideName(m, true)} pool</span><strong className="num">{exactEth(m.yesPool)} ETH</strong></div><div><span>{sideName(m, false)} pool</span><strong className="num">{exactEth(m.noPool)} ETH</strong></div></div>
-    {open && <form onSubmit={submit} noValidate>
-      <fieldset className="side-choice" disabled={busy}><legend>Choose your side</legend>{[true, false].map(side => <label key={String(side)} className={yes === side ? side ? 'selected-yes' : 'selected-no' : ''}><input type="radio" name="side" value={side ? 'yes' : 'no'} checked={yes === side} onChange={() => { setYes(side); onReset(); }}/><span>{sideName(m, side)}</span><span className="num">{formatOdds(odds(m, side))}</span></label>)}</fieldset>
+    <p className="slip-timing small muted"><Icon name="clock" size={15}/>{open ? `Betting closes in ${timeLeft(m.startsAt, now).replace(' left', '')}` : now < m.endsAt ? `Window ends in ${timeLeft(m.endsAt, now).replace(' left', '')}` : `Window ended ${date(m.endsAt)}`}</p>
+    {open && tx.stage !== 'success' && <form onSubmit={submit} noValidate>
+      <fieldset className="side-choice" disabled={busy}><legend>Choose your side <span className="small muted">Pool-based odds</span></legend>{[true, false].map(side => <label key={String(side)} className={yes === side ? side ? 'selected-yes' : 'selected-no' : ''}><input type="radio" name="side" value={side ? 'yes' : 'no'} checked={yes === side} onChange={() => { setYes(side); onReset(); }}/><span>{sideName(m, side)}</span><span className="num">{percentLabel(poolPercent(m, side))}</span></label>)}</fieldset>
       <label className="field-label" htmlFor="stake">Your stake <span>Sepolia test ETH</span></label>
       <div className="amount-field"><input ref={field} id="stake" name="stake" inputMode="decimal" autoComplete="off" value={stake} onChange={e => { setStake(e.target.value); setError(''); onReset(); }} aria-invalid={Boolean(error)} aria-describedby="stake-help stake-error" disabled={busy}/><span>ETH</span></div>
       <div className="quick-amounts">{['0.001', '0.005', '0.01'].map(v => <button type="button" className={stake === v ? 'chosen' : ''} disabled={busy} key={v} onClick={() => { setStake(v); setError(''); onReset(); }}>{v} ETH</button>)}</div>
       <p className="small muted" id="stake-help">Minimum 0.0001 ETH. You also pay network gas.</p>
       <div className="estimate"><span>Estimated payout if {sideName(m, yes)} wins</span><strong className="num">{estimate === null ? 'Waiting for the other side' : `${eth(estimate)} ETH`}</strong></div>
-      <p className="small muted">Includes your existing stake on this side. Payout changes with the pools. Bets are final; you can lose your stake. An unmatched market is refunded.</p>
+      <p className="small muted">Includes your stake. Payouts change as bets come in. Bets are final; you can lose your stake.</p>
       <p id="stake-error" className="inline-error" role="alert">{error}</p>
       <button className="primary full" type="submit" disabled={busy || Boolean(address && (!ready || chainId !== chain.id))}>{busy ? tx.stage === 'pending' ? 'Confirming bet…' : tx.stage === 'checking' ? 'Checking market…' : 'Review in your wallet…' : !address ? 'Connect to place bet' : chainId !== chain.id ? 'Switch to Sepolia in the header' : `Bet ${sideName(m, yes)}`}<Icon name="arrow" size={18}/></button>
     </form>}
@@ -71,6 +70,11 @@ export function MarketDialog({ market: m, position: p, yes: initialYes, now, set
     {!ready && <p className="small inline-error">Fresh verified chain data is unavailable. Close this window and retry the connection.</p>}
     {m.status === 1 && <p className="result-note"><Icon name="check" size={18}/>{sideName(m, m.yesWins)} won with {(m.endBlockUnits / 1000000000n - m.startBlockUnits / 1000000000n).toLocaleString()} completed blocks.</p>}
     <TransactionNotice tx={tx}/>
-    <details className="market-details"><summary>Settlement details</summary><p className="small muted">Rounds {m.startRound.toString()}–{m.endRound.toString()}. Only official settled whole-block heights count; physical wheel revolutions are not a one-to-one block count. Winners share the full pool proportionally. No platform fee. The final winning claimant receives rounding dust.</p><a href={`${EXPLORER}/address/${PREDICT_ADDRESS}`} target="_blank" rel="noreferrer">View contract<Icon name="external" size={14}/></a></details>
+    {tx.stage === 'success' && <button className="primary full" onClick={onClose}>Done<Icon name="check" size={18}/></button>}
+    <details className="market-details"><summary>Market rules & details<Icon name="chevron" size={15}/></summary>
+      <dl className="market-facts"><div><dt>Betting closes / window starts</dt><dd>{date(m.startsAt)}</dd></div><div><dt>Window ends</dt><dd>{date(m.endsAt)}</dd></div></dl>
+      <div className="dialog-pools">{[true, false].map(side => <div key={String(side)}><span>{sideName(m, side)} pool</span><strong className="num">{exactEth(side ? m.yesPool : m.noPool)} ETH</strong><span>Current return: {formatOdds(odds(m, side))}</span></div>)}</div>
+      <p className="small muted">Exactly {m.threshold.toLocaleString()} blocks settles as {sideName(m, false)}. Percentages show the share of staked test ETH, not a guaranteed probability. An empty market starts at 50/50. Unmatched markets are refunded after betting closes.</p>
+      <p className="small muted">Rounds {m.startRound.toString()}–{m.endRound.toString()}. Only official settled whole-block heights count; physical wheel revolutions are not a one-to-one block count. Winners share the full pool proportionally. No platform fee. The final winning claimant receives rounding dust.</p><a href={`${EXPLORER}/address/${PREDICT_ADDRESS}`} target="_blank" rel="noreferrer">View contract<Icon name="external" size={14}/></a></details>
   </Modal>;
 }

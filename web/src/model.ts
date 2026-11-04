@@ -99,6 +99,13 @@ export function odds(m: Pick<Market, 'yesPool' | 'noPool'>, yes: boolean): numbe
   return Number(total * 1000n / side) / 1000;
 }
 export const formatOdds = (value: number | null) => value === null ? 'Open' : `${value.toFixed(2)}x`;
+/** Pool share, not a forecast or a fixed share price. Empty markets open at 50/50. */
+export function poolPercent(m: Pick<Market, 'yesPool' | 'noPool'>, yes: boolean) {
+  const total = m.yesPool + m.noPool;
+  const over = total === 0n ? 50 : Number(m.yesPool * 1000n / total) / 10;
+  return yes ? over : Number((100 - over).toFixed(1));
+}
+export const percentLabel = (value: number) => `${Number(value.toFixed(1))}%`;
 /** First round whose start is at or after `timestamp`. */
 export function roundAt(genesis: bigint, timestamp: bigint) {
   if (genesis <= 0n || timestamp < genesis) throw new Error('Unable to calculate the window. Refresh chain data and retry.');

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { Address } from 'viem';
 import { Icon } from './icons';
-import { formatOdds, line, odds, timeLeft, type Market, type Phase } from './model';
+import { eth, line, percentLabel, poolPercent, timeLeft, type Market, type Phase } from './model';
 import type { Preset } from './CreateDialog';
 import { readRoundHeights } from './history';
 import {
@@ -134,8 +134,9 @@ function ChainCard({ t, preset, open, now, busy, statsError, onBet, onCreate, on
       <p className="market-time"><Icon name="clock" size={15}/>Betting closes in <span className="num">{timeLeft(m.startsAt, now).replace(' left', '')}</span></p>
       <div className="odds-row">{[true, false].map(yes => <button key={String(yes)} className={`odds ${yes ? 'odds-yes' : 'odds-no'}`} onClick={() => onBet(m, yes)}>
         <span className="odds-side">{m.threshold === 0n ? (yes ? 'At least one block' : 'No blocks') : `${yes ? 'Over' : 'Under'} ${line(m.threshold)}`}</span>
-        <span className="odds-price num">{formatOdds(odds(m, yes))}</span>
+        <span className="odds-price num">{percentLabel(poolPercent(m, yes))}</span>
       </button>)}</div>
+      <div className="card-foot"><span>Volume <strong className="num">{eth(m.yesPool + m.noPool)} ETH</strong></span><span>Pool-based odds</span></div>
     </> : <>
       <p className="market-time"><Icon name="clock" size={15}/>{t.duration === DAY ? '24-hour' : '7-day'} window, settled by SqueekPredict</p>
       {preset.unavailable

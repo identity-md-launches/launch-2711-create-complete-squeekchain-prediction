@@ -77,3 +77,14 @@ test('zero-threshold questions describe block completion for either supported wi
   const completed = 500000000n / 1000000000n - 100000000n / 1000000000n;
   assert.equal(sideName({ threshold: 0n }, completed > 0n), 'No blocks');
 });
+
+import { poolPercent, percentLabel } from '../src/model.ts';
+test('pool percentages open at 50/50 and reflect bets without losing large bigint precision', () => {
+  for (const [yesPool, noPool, expected] of [[0n,0n,50], [1n,0n,100], [0n,1n,0], [3n,2n,60], [1n,2n,33.3], [100n*10n**18n,100n*10n**18n,50]]) {
+    const market = { yesPool, noPool };
+    assert.equal(poolPercent(market,true), expected);
+    assert.equal(poolPercent(market,true) + poolPercent(market,false), 100);
+  }
+  assert.equal(percentLabel(50), '50%');
+  assert.equal(percentLabel(33.3), '33.3%');
+});

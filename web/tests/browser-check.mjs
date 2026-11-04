@@ -151,6 +151,19 @@ async function assertTextFits(locator) {
     assert.deepEqual(outside,[], 'full label and multiplier must fit their control');
   }
 }
+async function measureColors(page) {
+  return page.evaluate(()=>{
+    const selectors=['.question-button','.card-foot','.odds-yes .odds-price','.odds-no .odds-price','.wallet-button','.chip.active'];
+    const luminance=rgb=>rgb.map(v=>{v/=255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4;}).reduce((sum,v,i)=>sum+v*[.2126,.7152,.0722][i],0);
+    return selectors.map(selector=>{
+      const el=document.querySelector(selector);const foreground=getComputedStyle(el).color;let node=el;let background;
+      while(node){background=getComputedStyle(node).backgroundColor;if(background!=='rgba(0, 0, 0, 0)')break;node=node.parentElement;}
+      const rgb=color=>color.match(/[\d.]+/g).slice(0,3).map(Number);
+      const a=luminance(rgb(foreground));const b=luminance(rgb(background));
+      return {selector,foreground,background,ratio:Number(((Math.max(a,b)+.05)/(Math.min(a,b)+.05)).toFixed(2))};
+    });
+  });
+}
 try {
   await test('Markets render with odds, wheel stats and no console errors (1440)', async () => {
     resetFixtures(); const {page,context}=await fixturePage(); const errors=[]; page.on('pageerror',e=>errors.push(e.message));
@@ -160,8 +173,11 @@ try {
     assert.equal(await page.locator('.window-grid dd').nth(4).innerText(), '432'); // 144 rounds x 3 blocks, mocked
     const first = page.locator('article.market-card').filter({hasText:'#1'});
     assert.match(await first.innerText(), /Over 1,000\.5/);
-    assert.match(await first.locator('.odds-yes .odds-price').innerText(), /^\d+\.\d\dx$/);
-    await noOverflow(page); await page.screenshot({path:`${shots}/fixture-1440.png`}); assert.deepEqual(errors, []); await context.close();
+    assert.equal(await first.locator('.odds-yes .odds-price').innerText(), '60%');
+    assert.equal(await first.locator('.odds-no .odds-price').innerText(), '40%');
+    assert.match(await first.innerText(), /Volume\s+0.02 ETH/);
+    await writeFile(`${shots}/contrast.json`,JSON.stringify(await measureColors(page),null,2));
+    await noOverflow(page); await page.screenshot({animations:'disabled',path:`${shots}/fixture-1440.png`}); assert.deepEqual(errors, []); await context.close();
   });
   await test('Homepage name, hero art, credits, founder previews and stats history', async () => {
     resetFixtures(); const {page,context}=await fixturePage(); const errors=[]; page.on('pageerror',e=>errors.push(e.message));
@@ -277,6 +293,13 @@ try {
     await page.getByRole('button',{name:'Connect wallet'}).click(); await page.getByRole('button',{name:/Test Browser Wallet/}).click();
     await page.locator('.chain-card').filter({hasText:'Will the hamster complete a block in the next 24 hours?'}).getByRole('button',{name:'Open this market'}).click();
     const d=page.getByRole('dialog',{name:'Create a market'}); await d.waitFor();
+    const lineInput=d.getByLabel('Line: more than this many Squeek blocks');
+    await lineInput.fill('18446744073709551615');
+    await d.getByRole('button',{name:'Raise the line by 10'}).click();
+    assert.equal(await lineInput.inputValue(),'18446744073709551615');
+    await d.getByRole('button',{name:'Lower the line by 10'}).click();
+    assert.equal(await lineInput.inputValue(),'18446744073709551605');
+    await lineInput.fill('0');
     await d.getByRole('button',{name:'Raise the line by 10'}).click();
     await d.getByText('Pick a time').click();
     const t=new Date((Number(now)+3*3600)*1000); const pad=n=>String(n).padStart(2,'0');
@@ -296,11 +319,15 @@ try {
     await d.getByLabel('Start date and time').fill(`${t.getFullYear()}-${pad(t.getMonth()+1)}-${pad(t.getDate())}T${pad(t.getHours())}:${pad(t.getMinutes())}`);
     await d.getByText(/at least 65 minutes/).waitFor(); assert.ok(await d.getByRole('button',{name:'Create market'}).isDisabled()); assert.equal(transactions.length,0); await context.close();
   });
-  await test('My bets: one-tap claim and resolve flow', async () => {
+  await test('My positions: one-tap claim and resolve flow', async () => {
     resetFixtures(); const {page,context}=await fixturePage();
     await page.getByRole('button',{name:'Connect wallet'}).click(); await page.getByRole('button',{name:/Test Browser Wallet/}).click();
-    await page.getByRole('link',{name:/My bets/}).first().click();
+    await page.getByRole('link',{name:/My positions/}).first().click();
     await page.getByRole('heading',{name:'Ready to claim'}).waitFor();
+    await page.screenshot({animations:'disabled',path:`${shots}/positions-1440.png`});
+    await page.setViewportSize({width:390,height:844});
+    await noOverflow(page);
+    await page.screenshot({animations:'disabled',path:`${shots}/positions-390.png`});
     await page.locator('.claim-list').getByRole('button',{name:'Claim'}).click();
     await page.getByText('Winnings from market #4 claimed.').first().waitFor();
     assert.deepEqual(transactions.map(t=>[t.functionName,...t.args]), [['claim','4',getAddress(ACCOUNT)]]);
@@ -317,10 +344,14 @@ try {
       await noOverflow(page);
       const create=await page.getByRole('button',{name:'Create market',exact:true}).first().boundingBox(); assert.ok(create && create.y+create.height<844);
       const h1=await page.locator('h1').boundingBox(); assert.ok(h1.y<200);
-      await page.screenshot({path:`${shots}/fixture-${width}.png`});
+      await page.screenshot({animations:'disabled',path:`${shots}/fixture-${width}.png`});
       await page.locator('article.market-card').first().locator('.odds-yes').click();
       await page.getByRole('dialog',{name:'Bet slip'}).waitFor(); await noOverflow(page); await assertNoScroll(page.getByRole('dialog',{name:'Bet slip'}));
-      if (width===390) await page.screenshot({path:`${shots}/mobile-bet-slip.png`});
+      if (width===390) {
+        await page.screenshot({animations:'disabled',path:`${shots}/mobile-bet-slip.png`});
+        const axe=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa','wcag22aa']).analyze();
+        assert.deepEqual(axe.violations.map(v=>`${v.id}: ${v.nodes.length}`), []);
+      }
       await page.keyboard.press('Escape');
       if (width===390) { const axe=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa','wcag22aa']).analyze(); assert.deepEqual(axe.violations.map(v=>`${v.id}: ${v.nodes.length}`), []); }
       await context.close();
@@ -346,12 +377,12 @@ try {
       await assertNoScroll(slip);
       await assertTextFits(slip.locator('.side-choice label'));
       await assertTextFits(slip.locator('button[type="submit"]'));
-      await slip.getByRole('radio',{name:`Over ${line} 1.67x`,exact:true}).focus();
+      await slip.getByRole('radio',{name:`Over ${line} 60%`,exact:true}).focus();
       await page.keyboard.press('ArrowRight');
-      assert.ok(await slip.getByRole('radio',{name:`Under ${line} 2.50x`,exact:true}).isChecked());
+      assert.ok(await slip.getByRole('radio',{name:`Under ${line} 40%`,exact:true}).isChecked());
       assert.ok(await slip.getByRole('button',{name:`Bet Under ${line}`,exact:true}).isVisible());
       await assertNoScroll(slip);
-      if (width===390) await page.screenshot({path:`${shots}/long-line-slip-390.png`});
+      if (width===390) await page.screenshot({animations:'disabled',path:`${shots}/long-line-slip-390.png`});
       await page.keyboard.press('Escape'); await noOverflow(page);
       await context.close();
     }
@@ -370,7 +401,7 @@ try {
       await page.waitForTimeout(200); // Allow the connected claim badge to arrive from RPC.
       await noOverflow(page); await assertInViewport(action); await assertTextFits(action);
       assert.ok(await page.getByRole('link',{name:'Squeek Predict home'}).isVisible());
-      if (width===390) await page.screenshot({path:`${shots}/wrong-network-390.png`});
+      if (width===390) await page.screenshot({animations:'disabled',path:`${shots}/wrong-network-390.png`});
       await action.click(); await page.getByRole('button',{name:/0x1234…7890/}).waitFor();
       assert.equal(transactions.length,0);
       await context.close();
@@ -383,8 +414,8 @@ try {
       const retry=page.locator('#wheel').getByRole('button',{name:'Retry wheel stats'});
       await retry.waitFor({timeout:30000});
       assert.equal(await page.locator('.window-grid, .fact-list, .live-line').count(),0);
-      assert.equal(await page.locator('.pulse strong').innerText(),'Wheel stats unavailable');
-      if(mode==='partial') await page.locator('.wheel-panel').screenshot({path:`${shots}/history-error.png`});
+      assert.match(await page.locator('#wheel').innerText(), /Couldn’t read the wheel history/);
+      if(mode==='partial') await page.locator('.wheel-panel').screenshot({animations:'disabled',path:`${shots}/history-error.png`});
       historyMode='complete'; await retry.click();
       await page.locator('.window-grid dd').first().waitFor({timeout:30000});
       assert.deepEqual(await page.locator('.window-grid dd').allTextContents(), ['18','54','108','216','432','3,024']);
@@ -393,7 +424,7 @@ try {
       await context.close();
     }
   });
-  await test('First phone screen shows a complete hamster question and its answer buttons', async () => {
+  await test('First phone screen shows a complete on-chain question and both betting buttons', async () => {
     resetFixtures();
     for (const width of [390, 320]) {
       const {page,context}=await fixturePage({width,height:844},true);
@@ -402,11 +433,17 @@ try {
       const actions=await page.locator('.hero-actions > *').evaluateAll(els=>els.map(e=>Math.round(e.getBoundingClientRect().top)));
       assert.equal(new Set(actions).size, 1, `hero actions share one row at ${width}`);
       await assertTextFits(page.locator('.hero-actions > *'));
-      const first=page.locator('#hamster .hamster-card').first();
-      const box=await first.locator('.call-options').evaluate(el=>{const r=el.getBoundingClientRect();return {top:r.top,bottom:r.bottom};});
+      const artOverlapsText=await page.locator('.lead').evaluate(el=>{
+        const art=document.querySelector('.hero-art').getBoundingClientRect();const range=document.createRange();range.selectNodeContents(el);
+        return [...range.getClientRects()].some(r=>r.right>art.left&&r.left<art.right&&r.bottom>art.top&&r.top<art.bottom);
+      });
+      assert.equal(artOverlapsText,false,'hero artwork leaves the description legible');
+      const first=page.locator('article.market-card').first();
+      const box=await first.locator('.odds-row').evaluate(el=>{const r=el.getBoundingClientRect();return {top:r.top,bottom:r.bottom};});
       const title=await first.locator('h3').evaluate(el=>el.getBoundingClientRect().top);
       console.log(`  ${width}: first answer row ${box.top.toFixed(1)}-${box.bottom.toFixed(1)}`);
-      if (width===390) { assert.ok(title>=0 && box.bottom<=844, `first hamster answer row ends at ${box.bottom}`); await page.screenshot({path:`${shots}/first-screen-390.png`}); }
+      assert.ok(title>=0 && box.bottom<=844, `first on-chain answer row ends at ${box.bottom}`);
+      if (width===390) { await page.screenshot({animations:'disabled',path:`${shots}/first-screen-390.png`}); }
       await noOverflow(page); await context.close();
     }
   });
@@ -446,7 +483,7 @@ try {
     assert.match(await page.locator('article.market-card').filter({hasText:'#2'}).innerText(),/complete a block in this 7-day window/);
     assert.match(await page.locator('article.market-card').filter({hasText:'#4'}).innerText(),/No blocks won with 0 blocks/);
     assert.deepEqual(await page.locator('.window-grid dd').allTextContents(),['0','0','0','0','0','0']);
-    assert.equal(await page.locator('.pulse strong').innerText(),'No blocks in last certified hour');
+    assert.match(await page.locator('#wheel .live-line').innerText(), /No blocks completed/);
     assert.match(await page.locator('.live-line').innerText(),/No blocks completed in the last certified hour/);
     assert.match(await page.locator('.fact-list').innerText(),/Rounds with blocks, 24h\s+0 of 144/);
     assert.match(await page.locator('.wheel-panel').innerText(),/does not measure continuous running/);
@@ -462,8 +499,141 @@ try {
     await create.getByLabel('Line: more than this many Squeek blocks').fill('0');
     assert.match(await create.locator('#line-help').innerText(),/At least one block or No blocks/);
     await page.keyboard.press('Escape');
-    await page.locator('.wheel-panel').screenshot({path:`${shots}/partial-block-stats.png`});
+    await page.locator('.wheel-panel').screenshot({animations:'disabled',path:`${shots}/partial-block-stats.png`});
     await noOverflow(page); await context.close();
+  });
+  await test('Empty pools start at 50/50 and percentages update after confirmed bets', async () => {
+    resetFixtures(); markets[1].yesPool=0n; markets[1].noPool=0n;
+    const {page,context}=await fixturePage();
+    const card=page.locator('article.market-card').filter({hasText:'#1'});
+    assert.deepEqual(await card.locator('.odds-price').allTextContents(), ['50%','50%']);
+    await card.locator('.odds-yes').click();
+    const slip=page.getByRole('dialog',{name:'Bet slip'});
+    await slip.getByRole('button',{name:'Connect to place bet'}).click();
+    await page.getByRole('button',{name:/Test Browser Wallet/}).click();
+    await page.getByRole('button',{name:/0x1234…7890/}).waitFor();
+    await slip.getByRole('button',{name:'Bet Over 1,000.5'}).click();
+    await slip.getByText('Your Over 1,000.5 bet is confirmed.').waitFor();
+    await slip.getByRole('button',{name:'Done',exact:true}).click();
+    await card.locator('.odds-yes .odds-price').filter({hasText:/^100%$/}).waitFor();
+    assert.deepEqual(await card.locator('.odds-price').allTextContents(), ['100%','0%']);
+    await card.locator('.odds-no').click();
+    await slip.getByRole('button',{name:'Bet Under 1,000.5'}).click();
+    await slip.getByText('Your Under 1,000.5 bet is confirmed.').waitFor();
+    await slip.getByRole('button',{name:'Done',exact:true}).click();
+    await card.locator('.card-foot').getByText('0.002 ETH',{exact:true}).waitFor();
+    assert.deepEqual(await card.locator('.odds-price').allTextContents(), ['50%','50%']);
+    await card.locator('.card-foot').getByText('0.002 ETH',{exact:true}).waitFor();
+    assert.match(await card.innerText(), /Volume\s+0.002 ETH/);
+    assert.deepEqual(transactions.map(t=>[t.functionName,...t.args]), [['bet','1','true'],['bet','1','false']]);
+    await context.close();
+  });
+  await test('Connect during a bet preserves side and custom stake; rejection is recoverable', async () => {
+    resetFixtures(); const {page,context}=await fixturePage({width:390,height:844});
+    const card=page.locator('article.market-card').filter({hasText:'#1'});
+    await card.locator('.odds-no').click();
+    const slip=page.getByRole('dialog',{name:'Bet slip'});
+    await slip.getByLabel(/Your stake/).fill('0.0067');
+    await slip.getByRole('button',{name:'Connect to place bet'}).click();
+    const picker=page.getByRole('dialog',{name:'Connect a wallet'});
+    await picker.waitFor();
+    await page.keyboard.press('Escape');
+    assert.ok(await slip.isVisible());
+    assert.equal(await slip.getByLabel(/Your stake/).inputValue(),'0.0067');
+    await slip.getByRole('button',{name:'Connect to place bet'}).click();
+    await page.getByRole('button',{name:/Test Browser Wallet/}).click();
+    await page.getByRole('button',{name:/0x1234…7890/}).waitFor();
+    assert.equal(await slip.getByLabel(/Your stake/).inputValue(),'0.0067');
+    assert.ok(await slip.getByRole('radio',{name:/Under 1,000\.5/}).isChecked());
+    await page.evaluate(()=>window.rejectNext=true);
+    await slip.getByRole('button',{name:'Bet Under 1,000.5'}).click();
+    await slip.getByText('Request declined in your wallet. You can try again.').waitFor();
+    assert.equal(transactions.length,0);
+    assert.equal(await slip.getByLabel(/Your stake/).inputValue(),'0.0067');
+    await slip.getByRole('button',{name:'Bet Under 1,000.5'}).click();
+    await slip.getByText('Your Under 1,000.5 bet is confirmed.').waitFor();
+    assert.equal(BigInt(transactions[0].value),parseEther('0.0067'));
+    await slip.getByRole('button',{name:'Done',exact:true}).click();
+    await noOverflow(page); await context.close();
+  });
+  await test('Zero live markets gives an actionable first screen and preserves creation through connect', async () => {
+    resetFixtures(); markets={}; positions={};
+    for (const width of [320,390,1440]) {
+      const context=await browser.newContext({viewport:{width,height:844}}); const page=await context.newPage();
+      await context.route(/ethereum-sepolia-rpc\.publicnode\.com|rpc\.sepolia\.ethpandaops\.io|sepolia\.rpc\.sentio\.xyz/,routeRpc);
+      await page.goto(url); await page.getByRole('heading',{name:'Start the first prediction'}).waitFor();
+      const action=await page.locator('.empty').getByRole('button',{name:'Create market'}).boundingBox();
+      assert.ok(action.y+action.height<=844, `empty market action visible at ${width}`);
+      assert.equal(await page.locator('article.market-card').count(),0);
+      await noOverflow(page); await page.screenshot({animations:'disabled',path:`${shots}/empty-${width}.png`});
+      await context.close();
+    }
+    // No fixturePage helper here: a zero-market response must never wait for a market card.
+    resetFixtures(); const {page,context}=await fixturePage();
+    await page.getByRole('button',{name:'Create market',exact:true}).first().click();
+    const dialog=page.getByRole('dialog',{name:'Create a market'});
+    await dialog.getByLabel('Line: more than this many Squeek blocks').fill('777');
+    await dialog.getByRole('button',{name:'Connect to create market'}).click();
+    await page.getByRole('button',{name:/Test Browser Wallet/}).click();
+    await page.getByRole('button',{name:/0x1234…7890/}).waitFor();
+    assert.equal(await dialog.getByLabel('Line: more than this many Squeek blocks').inputValue(),'777');
+    await dialog.getByRole('button',{name:'Create market',exact:true}).click();
+    await dialog.getByText(/Your market is live/).waitFor();
+    assert.equal(transactions[0].args[0],'777');
+    await context.close();
+  });
+  await test('Keyboard bet entry, visible focus, modal focus trap and focus return', async () => {
+    resetFixtures(); const {page,context}=await fixturePage({width:390,height:844});
+    const trigger=page.locator('article.market-card').first().locator('.odds-yes');
+    await trigger.focus(); await page.keyboard.press('Enter');
+    const slip=page.getByRole('dialog',{name:'Bet slip'}); await slip.waitFor();
+    await page.keyboard.press('Tab');
+    assert.ok(await slip.evaluate(el=>el.contains(document.activeElement)));
+    const ring=await page.evaluate(()=>({outline:getComputedStyle(document.activeElement).outlineStyle,ancestor:getComputedStyle(document.activeElement.closest('label')??document.activeElement).outlineStyle}));
+    assert.ok(ring.outline==='solid'||ring.ancestor==='solid');
+    await page.screenshot({animations:'disabled',path:`${shots}/keyboard-focus-390.png`});
+    assert.ok(await slip.evaluate(el=>el.matches(':modal')));
+    for(let i=0;i<22;i++) { await page.keyboard.press('Tab'); assert.ok(await slip.evaluate(el=>el.contains(document.activeElement)||document.activeElement===document.body), 'Tab never reaches an interactive background element'); }
+    await trigger.focus();
+    assert.ok(!await trigger.evaluate(el=>el===document.activeElement), 'native modal makes background controls inert');
+    await page.keyboard.press('Escape');
+    assert.ok(await trigger.evaluate(el=>el===document.activeElement));
+    await noOverflow(page); await context.close();
+  });
+  await test('My positions navigation returns to the top and focuses the new view', async () => {
+    resetFixtures(); const {page,context}=await fixturePage();
+    await page.locator('#history').scrollIntoViewIfNeeded();
+    assert.ok(await page.evaluate(()=>scrollY)>500);
+    await page.locator('.main-nav').getByRole('link',{name:'My positions',exact:true}).click();
+    await page.getByRole('heading',{name:'My positions',exact:true}).first().waitFor();
+    assert.equal(await page.evaluate(()=>scrollY),0);
+    assert.equal(await page.evaluate(()=>document.activeElement.id),'main');
+    await page.getByRole('heading',{name:'Your positions, all in one place'}).waitFor();
+    await page.locator('.skip-link').focus(); await page.keyboard.press('Enter');
+    assert.equal(await page.locator('h1').innerText(),'My positions', 'skip link preserves the active view');
+    await page.getByRole('button',{name:'Connect wallet',exact:true}).last().click();
+    await page.getByRole('dialog',{name:'Connect a wallet'}).waitFor();
+    await page.keyboard.press('Escape');
+    await page.locator('.main-nav').getByRole('link',{name:'Markets',exact:true}).click();
+    assert.equal(await page.locator('article.market-card').count(),6);
+    await context.close();
+  });
+  await test('Wrong-network bet is disabled, wallet switching recovers and account changes close the slip', async () => {
+    resetFixtures(); const {page,context}=await fixturePage();
+    await page.locator('.wallet-button').click(); await page.getByRole('button',{name:/Test Browser Wallet/}).click();
+    await page.getByRole('button',{name:/0x1234…7890/}).waitFor();
+    await page.evaluate(()=>window.setTestChain('0x1'));
+    await page.locator('article.market-card').first().locator('.odds-yes').click();
+    const slip=page.getByRole('dialog',{name:'Bet slip'});
+    assert.ok(await slip.getByRole('button',{name:'Switch to Sepolia in the header'}).isDisabled());
+    await page.keyboard.press('Escape');
+    await page.getByRole('button',{name:'Switch to Sepolia',exact:true}).click();
+    await page.getByRole('button',{name:/0x1234…7890/}).waitFor();
+    await page.locator('article.market-card').first().locator('.odds-yes').click();
+    assert.ok(await slip.getByRole('button',{name:/Bet Over/}).isEnabled());
+    await page.evaluate(()=>window.setTestAccount('0x2234567890123456789012345678901234567890'));
+    await slip.waitFor({state:'hidden'});
+    assert.equal(transactions.length,0); await context.close();
   });
   await test('Phone wallet sheet offers Open in links and Coinbase Smart Wallet', async () => {
     resetFixtures(); const {page,context}=await fixturePage({width:390,height:844},true);
