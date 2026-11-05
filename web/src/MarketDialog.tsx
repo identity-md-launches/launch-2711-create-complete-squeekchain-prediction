@@ -55,7 +55,7 @@ export function MarketDialog({ market: m, position: p, yes: initialYes, now, set
       <div className="quick-amounts">{['0.001', '0.005', '0.01'].map(v => <button type="button" className={stake === v ? 'chosen' : ''} disabled={busy} key={v} onClick={() => { setStake(v); setError(''); onReset(); }}>{v} ETH</button>)}</div>
       <p className="small muted" id="stake-help">Minimum 0.0001 ETH. You also pay network gas.</p>
       <div className="estimate"><span>Estimated payout if {sideName(m, yes)} wins</span><strong className="num">{estimate === null ? 'Waiting for the other side' : `${eth(estimate)} ETH`}</strong></div>
-      <p className="small muted">Includes your stake. Payouts change as bets come in. Bets are final; you can lose your stake.</p>
+      <p className="small muted">Includes your stake{p && (yes ? p.yes : p.no) > 0n ? ' and your existing stake on this side' : ''}. Payouts change as bets come in. Bets are final; you can lose your stake.</p>
       <p id="stake-error" className="inline-error" role="alert">{error}</p>
       <button className="primary full" type="submit" disabled={busy || Boolean(address && (!ready || chainId !== chain.id))}>{busy ? tx.stage === 'pending' ? 'Confirming bet…' : tx.stage === 'checking' ? 'Checking market…' : 'Review in your wallet…' : !address ? 'Connect to place bet' : chainId !== chain.id ? 'Switch to Sepolia in the header' : `Bet ${sideName(m, yes)}`}<Icon name="arrow" size={18}/></button>
     </form>}
@@ -74,7 +74,7 @@ export function MarketDialog({ market: m, position: p, yes: initialYes, now, set
     <details className="market-details"><summary>Market rules & details<Icon name="chevron" size={15}/></summary>
       <dl className="market-facts"><div><dt>Betting closes / window starts</dt><dd>{date(m.startsAt)}</dd></div><div><dt>Window ends</dt><dd>{date(m.endsAt)}</dd></div></dl>
       <div className="dialog-pools">{[true, false].map(side => <div key={String(side)}><span>{sideName(m, side)} pool</span><strong className="num">{exactEth(side ? m.yesPool : m.noPool)} ETH</strong><span>Current return: {formatOdds(odds(m, side))}</span></div>)}</div>
-      <p className="small muted">Exactly {m.threshold.toLocaleString()} blocks settles as {sideName(m, false)}. Percentages show the share of staked test ETH, not a guaranteed probability. An empty market starts at 50/50. Unmatched markets are refunded after betting closes.</p>
+      <p className="small muted">Yes requires strictly more than {m.threshold.toLocaleString()} completed blocks. Exactly {m.threshold.toLocaleString()} settles as No. Percentages show the share of staked test ETH, not a guaranteed probability. An empty market starts at 50/50. Unmatched markets are refunded after betting closes.</p>
       <p className="small muted">Rounds {m.startRound.toString()}–{m.endRound.toString()}. Only official settled whole-block heights count; physical wheel revolutions are not a one-to-one block count. Winners share the full pool proportionally. No platform fee. The final winning claimant receives rounding dust.</p><a href={`${EXPLORER}/address/${PREDICT_ADDRESS}`} target="_blank" rel="noreferrer">View contract<Icon name="external" size={14}/></a></details>
   </Modal>;
 }

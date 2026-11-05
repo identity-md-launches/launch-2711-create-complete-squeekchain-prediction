@@ -11,12 +11,12 @@ export type Market = {
   remainingWinningStake: bigint; remainingPayout: bigint;
 };
 export type Position = { yes: bigint; no: bigint; claimed: boolean; claimable: bigint };
-export type Phase = 'Open for bets' | 'In progress' | 'Awaiting settlement' | 'Ready to resolve' | 'Refund available' | 'Resolved' | 'Refunded';
+export type Phase = 'Open for bets' | 'In progress' | 'Awaiting settlement' | 'Ready to resolve' | 'Refund available' | 'Resolved' | 'Cancelled';
 export const durationName = (m: Pick<Market, 'startsAt' | 'endsAt'>) => m.endsAt - m.startsAt === BigInt(DAY) ? '24 hours' : '7 days';
 export const question = (m: Pick<Market, 'threshold' | 'startsAt' | 'endsAt'>) => `Will the hamster complete more than ${m.threshold.toLocaleString()} blocks in ${durationName(m)}?`;
 export function phase(m: Market, now: bigint, settled?: bigint): Phase {
   if (m.status === 1) return 'Resolved';
-  if (m.status === 2) return 'Refunded';
+  if (m.status === 2) return 'Cancelled';
   if (now < m.startsAt) return 'Open for bets';
   if (now >= m.refundAt || m.yesPool === 0n || m.noPool === 0n) return 'Refund available';
   if (now < m.endsAt) return 'In progress';
@@ -85,12 +85,11 @@ export function kind(m: Pick<Market, 'threshold' | 'startsAt' | 'endsAt'>, best2
 }
 export const line = (threshold: bigint) => `${threshold.toLocaleString()}.5`;
 export function title(m: Pick<Market, 'threshold' | 'startsAt' | 'endsAt'>, best24?: number) {
-  const k = kind(m, best24);
+  void best24;
   if (m.threshold === 0n) return `Will the hamster complete a block in this ${durationName(m) === '24 hours' ? '24-hour' : '7-day'} window?`;
-  if (k === 'Record attempt') return `Record attempt: over ${line(m.threshold)} blocks in 24 hours`;
-  return `Squeek blocks in ${durationName(m)}: over or under ${line(m.threshold)}`;
+  return question(m);
 }
-export const sideName = (m: Pick<Market, 'threshold'>, yes: boolean) => m.threshold === 0n ? (yes ? 'At least one block' : 'No blocks') : `${yes ? 'Over' : 'Under'} ${line(m.threshold)}`;
+export const sideName = (_m: Pick<Market, 'threshold'>, yes: boolean) => yes ? 'Yes' : 'No';
 /** Current pari-mutuel multiplier for a side: total pool divided by that side's pool. */
 export function odds(m: Pick<Market, 'yesPool' | 'noPool'>, yes: boolean): number | null {
   const side = yes ? m.yesPool : m.noPool;

@@ -42,7 +42,7 @@ test('lifecycle boundaries close bets exactly at startsAt and unlock timeout ref
   assert.equal(phase(m, 300n, 20n), 'Refund available');
   assert.equal(phase({ ...m, noPool: 0n }, 100n), 'Refund available');
   assert.equal(phase({ ...m, status: 1 }, 300n), 'Resolved');
-  assert.equal(phase({ ...m, status: 2 }, 300n), 'Refunded');
+  assert.equal(phase({ ...m, status: 2 }, 300n), 'Cancelled');
 });
 test('tiny positive balances are never displayed as zero', () => {
   assert.equal(eth(1n), '<0.00001');
@@ -55,8 +55,11 @@ test('pool odds, sides and market kinds follow the contract rule', () => {
   assert.equal(odds({ yesPool: parseEther('3'), noPool: parseEther('1') }, false), 4);
   assert.equal(odds({ yesPool: 0n, noPool: parseEther('1') }, true), null);
   assert.equal(line(1000n), '1,000.5');
-  assert.equal(sideName({ threshold: 0n }, true), 'At least one block');
-  assert.equal(sideName({ threshold: 0n }, false), 'No blocks');
+  assert.equal(sideName({ threshold: 0n }, true), 'Yes');
+  assert.equal(sideName({ threshold: 0n }, false), 'No');
+  assert.equal(sideName({ threshold: 1000n }, true), 'Yes');
+  assert.equal(sideName({ threshold: 1000n }, false), 'No');
+  assert.equal(title({ ...{startsAt:0n,endsAt:86400n}, threshold:1000n }), 'Will the hamster complete more than 1,000 blocks in 24 hours?');
   const day = { startsAt: 0n, endsAt: 86400n };
   assert.equal(kind({ ...day, threshold: 0n }), 'Activity');
   assert.equal(kind({ ...day, threshold: 1200n }, 1100), 'Record attempt');
@@ -75,7 +78,7 @@ test('zero-threshold questions describe block completion for either supported wi
   assert.equal(title({ threshold: 0n, startsAt: 0n, endsAt: 86400n }), 'Will the hamster complete a block in this 24-hour window?');
   assert.equal(title({ threshold: 0n, startsAt: 0n, endsAt: 604800n }), 'Will the hamster complete a block in this 7-day window?');
   const completed = 500000000n / 1000000000n - 100000000n / 1000000000n;
-  assert.equal(sideName({ threshold: 0n }, completed > 0n), 'No blocks');
+  assert.equal(sideName({ threshold: 0n }, completed > 0n), 'No');
 });
 
 import { poolPercent, percentLabel } from '../src/model.ts';

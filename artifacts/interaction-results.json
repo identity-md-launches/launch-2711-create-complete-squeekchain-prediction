@@ -1,106 +1,78 @@
 [
   {
-    "name": "Markets render with odds, wheel stats and no console errors (1440)",
+    "name": "Open binary markets, pool odds and local assets render without page errors",
     "passed": true
   },
   {
-    "name": "Homepage name, hero art, credits, founder previews and stats history",
+    "name": "Responsive board at 320, 390, 800, 980 and 1440; side buttons visible on first 390 screen",
     "passed": true
   },
   {
-    "name": "Hamster markets: every family visible, categories, free calls persist and settle, on-chain lines bet",
+    "name": "Status, duration, search, sort and clear filters change the board",
     "passed": true
   },
   {
-    "name": "No open markets suggests the next window",
+    "name": "Stake validation, quick amounts and payout rules are usable before connecting",
     "passed": true
   },
   {
-    "name": "Filters: status, length, type, search and clear",
+    "name": "Connect preserves side and stake; rejection can retry and sends correct bet calldata",
     "passed": true
   },
   {
-    "name": "Connect wallet, open bet slip from odds, place an Under bet",
+    "name": "Empty pools begin at 50/50 and percentages update after confirmed Yes and No bets",
     "passed": true
   },
   {
-    "name": "Invalid stake shows a recoverable error and sends nothing",
+    "name": "Creation draft and chosen duration survive connection; creation sends exact target",
     "passed": true
   },
   {
-    "name": "Create market from an idea with a custom start time",
+    "name": "My positions shows stakes, claimable payouts and successful claims",
     "passed": true
   },
   {
-    "name": "Too-early custom start is refused before the wallet",
+    "name": "Resolve certified results and open unmatched refunds through market details",
     "passed": true
   },
   {
-    "name": "My positions: one-tap claim and resolve flow",
+    "name": "Disconnected positions offer connect; navigation and market help work",
     "passed": true
   },
   {
-    "name": "390 and 320 layouts: product and main action on first screen, no overflow, accessible",
+    "name": "Wrong network blocks betting, switch recovers and account changes close the slip",
     "passed": true
   },
   {
-    "name": "Full uint64 lines fit cards and connected slips at phone and desktop widths",
+    "name": "Phone wallet picker has all four wallet browsers and Coinbase Smart Wallet",
     "passed": true
   },
   {
-    "name": "Connect, connected and wrong-network headers fit across responsive breakpoints",
+    "name": "Keyboard entry, focus ring, modal inert background and focus return",
     "passed": true
   },
   {
-    "name": "Incomplete history never becomes zero stats; retry restores certified values",
+    "name": "Zero markets renders an honest, actionable first screen at 320, 390 and 1440",
     "passed": true
   },
   {
-    "name": "First phone screen shows a complete on-chain question and both betting buttons",
+    "name": "RPC outage has Retry and recovers; runtime mismatch fails closed",
     "passed": true
   },
   {
-    "name": "Record attempt stays unknown while weekly history is unavailable",
+    "name": "Long uint64 questions fit cards and slips without clipping",
     "passed": true
   },
   {
-    "name": "Known pre-genesis history stays zero without masking missing certified endpoints",
+    "name": "Older-market lookup validates input and locates a market; load older reads more",
     "passed": true
   },
   {
-    "name": "Partial-block work and threshold-zero wagers use block-completion wording",
+    "name": "Axe WCAG scans and measured rendered contrast on board and bet slip",
     "passed": true
   },
   {
-    "name": "Empty pools start at 50/50 and percentages update after confirmed bets",
-    "passed": true
-  },
-  {
-    "name": "Connect during a bet preserves side and custom stake; rejection is recoverable",
-    "passed": true
-  },
-  {
-    "name": "Zero live markets gives an actionable first screen and preserves creation through connect",
-    "passed": true
-  },
-  {
-    "name": "Keyboard bet entry, visible focus, modal focus trap and focus return",
-    "passed": true
-  },
-  {
-    "name": "My positions navigation returns to the top and focuses the new view",
-    "passed": true
-  },
-  {
-    "name": "Wrong-network bet is disabled, wallet switching recovers and account changes close the slip",
-    "passed": true
-  },
-  {
-    "name": "Phone wallet sheet offers Open in links and Coinbase Smart Wallet",
-    "passed": true
-  },
-  {
-    "name": "RPC outage shows a retry notice instead of a blank page",
+    "name": "No uncaught JavaScript errors or missing local resources across interaction scenarios",
     "passed": true
   }
 ]

@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { useConnection } from 'wagmi';
 import { Modal } from './Modal';
 import { Icon } from './icons';
-import { DAY, WEEK, checkStart, date, line, roundAt, roundStart, thresholdValue } from './model';
+import { DAY, WEEK, checkStart, date, roundAt, roundStart, thresholdValue } from './model';
 import { chain } from './config';
 import type { Snapshot } from './data';
 import { TransactionNotice, type Transact, type TxState } from './MarketDialog';
@@ -65,13 +65,13 @@ export function CreateDialog({ preset, snapshot, now, ready, tx, transact, onClo
       <fieldset className="segmented" disabled={busy}><legend>Window length</legend>
         {[[DAY, '24 hours'], [WEEK, '7 days']].map(([v, label]) => <label key={v} className={duration === v ? 'chosen' : ''}><input type="radio" name="duration" checked={duration === v} onChange={() => { setDuration(Number(v)); onReset(); }}/>{label}</label>)}
       </fieldset>
-      <label className="field-label" htmlFor="threshold">Line: more than this many Squeek blocks</label>
+      <label className="field-label" htmlFor="threshold">Block target</label>
       <div className="stepper">
         <button type="button" className="icon-button" aria-label="Lower the line by 10" onClick={() => step(-10)} disabled={busy}>−</button>
         <div className="amount-field"><input ref={field} id="threshold" name="threshold" inputMode="numeric" autoComplete="off" value={threshold} onChange={e => { setThreshold(e.target.value); setError(''); onReset(); }} aria-invalid={Boolean(error)} aria-describedby="line-help create-error" disabled={busy}/><span>blocks</span></div>
         <button type="button" className="icon-button" aria-label="Raise the line by 10" onClick={() => step(10)} disabled={busy}>+</button>
       </div>
-      <p className="small muted" id="line-help">{count === 0n ? <>Bettors pick <strong>At least one block</strong> or <strong>No blocks</strong>. Only completed Squeek blocks count.</> : count !== undefined ? <>Bettors pick <strong>Over {line(count)}</strong> or <strong>Under {line(count)}</strong>. Exactly {count.toLocaleString()} counts as under.</> : 'Enter a whole number of blocks.'}</p>
+      <p className="small muted" id="line-help">{count === 0n ? <>Yes means at least one completed block. No means no completed blocks.</> : count !== undefined ? <>Yes requires more than {count.toLocaleString()} completed blocks. Exactly {count.toLocaleString()} settles as No.</> : 'Enter a whole number. Yes wins if the hamster completes more blocks than this target.'}</p>
       <fieldset className="chips" disabled={busy}><legend>Window starts</legend>
         {startLabels.map(([v, label]) => <label key={v} className={choice === v ? 'chosen' : ''}><input type="radio" name="start" checked={choice === v} onChange={() => { setChoice(v); onReset(); }}/>{label}</label>)}
       </fieldset>
@@ -84,7 +84,7 @@ export function CreateDialog({ preset, snapshot, now, ready, tx, transact, onClo
       <p className="small muted">Creating a market costs gas and does not place a bet. SqueekCore certification can lag, so resolution may come days after the window ends.</p>
       <p id="create-error" className="inline-error" role="alert">{error}</p>
       {address && (!ready || !snapshot?.coreConfig || snapshot.coreState?.paused) && <p className="inline-error small">{snapshot?.coreState?.paused ? 'SqueekCore is paused. Creation is unavailable until it resumes.' : 'Fresh Core data is unavailable. Close this window and retry the connection.'}</p>}
-      <button type="submit" className="primary full" disabled={busy || Boolean(address && (!ready || !snapshot?.coreConfig || !snapshot.coreState || snapshot.coreState.paused || chainId !== chain.id || Boolean(startError)))}>{busy ? tx.stage === 'pending' ? 'Confirming market…' : 'Review in your wallet…' : !address ? 'Connect to create market' : chainId !== chain.id ? 'Close and switch to Sepolia' : 'Create market'}<Icon name="arrow" size={18}/></button>
+      {tx.stage === 'success' ? <button type="button" className="primary full" onClick={onClose}>Done<Icon name="check" size={18}/></button> : <button type="submit" className="primary full" disabled={busy || Boolean(address && (!ready || !snapshot?.coreConfig || !snapshot.coreState || snapshot.coreState.paused || chainId !== chain.id || Boolean(startError)))}>{busy ? tx.stage === 'pending' ? 'Confirming market…' : 'Review in your wallet…' : !address ? 'Connect to create market' : chainId !== chain.id ? 'Close and switch to Sepolia' : 'Create market'}<Icon name="arrow" size={18}/></button>}
       <TransactionNotice tx={tx}/>
     </form>
   </Modal>;

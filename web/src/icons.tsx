@@ -1,6 +1,9 @@
 import type { CSSProperties } from 'react';
-type Name = 'arrow' | 'wheel' | 'clock' | 'check' | 'close' | 'refresh' | 'external' | 'wallet' | 'plus' | 'search' | 'info' | 'chevron' | 'chart' | 'trophy' | 'moon' | 'bolt' | 'ticket';
+type Name = 'arrow' | 'wheel' | 'clock' | 'check' | 'close' | 'refresh' | 'external' | 'wallet' | 'plus' | 'search' | 'info' | 'chevron' | 'chart' | 'trophy' | 'moon' | 'bolt' | 'ticket' | 'grid' | 'calendar' | 'shield';
 const paths: Record<Name, React.ReactNode> = {
+  grid: <><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></>,
+  calendar: <><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18m-13 4h3m2 0h3"/></>,
+  shield: <><path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6l8-3Z"/><path d="m8 12 3 3 5-6"/></>,
   arrow: <><path d="M5 12h14M13 6l6 6-6 6" /></>,
   wheel: <><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/><path d="m12 3 0 7m2 2h7m-9 2v7m-2-9H3m2.6-6.4 5 5m2.8 2.8 5 5m0-12.8-5 5m-2.8 2.8-5 5"/></>,
   clock: <><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></>,

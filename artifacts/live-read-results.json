@@ -1,62 +1,46 @@
-[
-  {
-    "width": 390,
-    "body": "Markets\n\n0 open \u00b7 0 test ETH volume",
-    "stats": "Wheel form\n\nCertified through Oct 26, 5:20 PM\n\nNo blocks completed in the last certified hour. Certification is 9 days behind real time.\n24h ago\nBlocks per round\nLatest\n1h\n0\n3h\n0\n6h\n0\n12h\n178\n24h\n738\n7 days\n6,117\nLongest block streak, 24h\n1h 0m\nRounds with blocks, 24h\n19 of 144\nBest 24h this week\n1,074\nDaily average, 7 days\n874\n\nA block streak counts consecutive 10-minute rounds with completed blocks. It does not measure continuous running; work toward a partial block is not counted.\n\nBlocks by time of day\nNight\n00 to 06h\n4,188\nMorning\n06 to 12h\n533\nAfternoon\n12 to 18h\n0\nEvening\n18 to 24h\n1,396\n\nSeven certified days, in your local time. Short windows, block streaks and dayparts are stats only: the deployed contract settles 24-hour and 7-day totals.",
-    "preview": "Nov 4, 5:30 PM GMT+1 to Nov 5, 5:30 PM GMT+1\n\nBetting closes when the window starts. Times snap to 10-minute Squeek rounds.",
-    "overflow": false,
-    "errors": [],
-    "failedLocalResources": [],
-    "cancelledLocalRequests": [
-      {
-        "path": "/preview/",
-        "error": "net::ERR_ABORTED"
-      }
-    ]
-  },
-  {
-    "width": 1440,
-    "body": "Markets\n\n0 open \u00b7 0 test ETH volume",
-    "stats": "Wheel form\n\nCertified through Oct 26, 5:20 PM\n\nNo blocks completed in the last certified hour. Certification is 9 days behind real time.\n24h ago\nBlocks per round\nLatest\n1h\n0\n3h\n0\n6h\n0\n12h\n178\n24h\n738\n7 days\n6,117\nLongest block streak, 24h\n1h 0m\nRounds with blocks, 24h\n19 of 144\nBest 24h this week\n1,074\nDaily average, 7 days\n874\n\nA block streak counts consecutive 10-minute rounds with completed blocks. It does not measure continuous running; work toward a partial block is not counted.\n\nBlocks by time of day\nNight\n00 to 06h\n4,188\nMorning\n06 to 12h\n533\nAfternoon\n12 to 18h\n0\nEvening\n18 to 24h\n1,396\n\nSeven certified days, in your local time. Short windows, block streaks and dayparts are stats only: the deployed contract settles 24-hour and 7-day totals.",
-    "preview": "Nov 4, 5:30 PM GMT+1 to Nov 5, 5:30 PM GMT+1\n\nBetting closes when the window starts. Times snap to 10-minute Squeek rounds.",
-    "overflow": false,
-    "errors": [],
-    "failedLocalResources": [],
-    "cancelledLocalRequests": [
-      {
-        "path": "/preview/",
-        "error": "net::ERR_ABORTED"
-      }
-    ]
-  },
-  {
-    "width": 320,
-    "body": "Markets\n\n0 open \u00b7 0 test ETH volume",
-    "stats": "Wheel form\n\nCertified through Oct 26, 5:20 PM\n\nNo blocks completed in the last certified hour. Certification is 9 days behind real time.\n24h ago\nBlocks per round\nLatest\n1h\n0\n3h\n0\n6h\n0\n12h\n178\n24h\n738\n7 days\n6,117\nLongest block streak, 24h\n1h 0m\nRounds with blocks, 24h\n19 of 144\nBest 24h this week\n1,074\nDaily average, 7 days\n874\n\nA block streak counts consecutive 10-minute rounds with completed blocks. It does not measure continuous running; work toward a partial block is not counted.\n\nBlocks by time of day\nNight\n00 to 06h\n4,188\nMorning\n06 to 12h\n533\nAfternoon\n12 to 18h\n0\nEvening\n18 to 24h\n1,396\n\nSeven certified days, in your local time. Short windows, block streaks and dayparts are stats only: the deployed contract settles 24-hour and 7-day totals.",
-    "preview": "Nov 4, 5:30 PM GMT+1 to Nov 5, 5:30 PM GMT+1\n\nBetting closes when the window starts. Times snap to 10-minute Squeek rounds.",
-    "overflow": false,
-    "errors": [],
-    "failedLocalResources": [],
-    "cancelledLocalRequests": [
-      {
-        "path": "/preview/",
-        "error": "net::ERR_ABORTED"
-      }
-    ]
-  },
-  {
-    "width": 800,
-    "body": "Markets\n\n0 open \u00b7 0 test ETH volume",
-    "stats": "Wheel form\n\nCertified through Oct 26, 5:20 PM\n\nNo blocks completed in the last certified hour. Certification is 9 days behind real time.\n24h ago\nBlocks per round\nLatest\n1h\n0\n3h\n0\n6h\n0\n12h\n178\n24h\n738\n7 days\n6,117\nLongest block streak, 24h\n1h 0m\nRounds with blocks, 24h\n19 of 144\nBest 24h this week\n1,074\nDaily average, 7 days\n874\n\nA block streak counts consecutive 10-minute rounds with completed blocks. It does not measure continuous running; work toward a partial block is not counted.\n\nBlocks by time of day\nNight\n00 to 06h\n4,188\nMorning\n06 to 12h\n533\nAfternoon\n12 to 18h\n0\nEvening\n18 to 24h\n1,396\n\nSeven certified days, in your local time. Short windows, block streaks and dayparts are stats only: the deployed contract settles 24-hour and 7-day totals.",
-    "preview": "Nov 4, 5:30 PM GMT+1 to Nov 5, 5:30 PM GMT+1\n\nBetting closes when the window starts. Times snap to 10-minute Squeek rounds.",
-    "overflow": false,
-    "errors": [],
-    "failedLocalResources": [],
-    "cancelledLocalRequests": [
-      {
-        "path": "/preview/",
-        "error": "net::ERR_ABORTED"
-      }
-    ]
-  }
-]
+{
+  "results": [
+    {
+      "width": 320,
+      "productionSubpath": true,
+      "liveRpc": true,
+      "emptyMarketBoard": true,
+      "interFontLoaded": true,
+      "pageErrors": [],
+      "missingLocalResources": [],
+      "horizontalOverflow": false
+    },
+    {
+      "width": 390,
+      "productionSubpath": true,
+      "liveRpc": true,
+      "emptyMarketBoard": true,
+      "interFontLoaded": true,
+      "pageErrors": [],
+      "missingLocalResources": [],
+      "horizontalOverflow": false
+    },
+    {
+      "width": 800,
+      "productionSubpath": true,
+      "liveRpc": true,
+      "emptyMarketBoard": true,
+      "interFontLoaded": true,
+      "pageErrors": [],
+      "missingLocalResources": [],
+      "horizontalOverflow": false
+    },
+    {
+      "width": 1440,
+      "productionSubpath": true,
+      "liveRpc": true,
+      "emptyMarketBoard": true,
+      "interFontLoaded": true,
+      "pageErrors": [],
+      "missingLocalResources": [],
+      "horizontalOverflow": false
+    }
+  ],
+  "rpcCalls": 28,
+  "transactionsSent": 0
+}

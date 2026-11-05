@@ -1,15 +1,43 @@
 {
-  "observedAt": "2026-11-04T15:01:22.191Z",
-  "rpc": "https://ethereum-sepolia-rpc.publicnode.com",
+  "observedAt": "2026-11-05T21:49:42.202Z",
+  "sources": [
+    "https://ethereum-sepolia-rpc.publicnode.com",
+    "https://rpc.sepolia.ethpandaops.io",
+    "https://sepolia.rpc.sentio.xyz"
+  ],
   "chainId": 11155111,
-  "blockNumber": "12063174",
-  "predictAddress": "0x8bd658e58e94ab6a18a8b9d8c6108d1287facacf",
-  "coreAddress": "0x74665dAecA35A2303e767E76a2FF1FB6F93e119f",
+  "address": "0x8bd658e58e94ab6a18a8b9d8c6108d1287facacf",
+  "sourceCommit": "841002e57646285ae0bd5a31e9af3c08f4f4839d",
+  "abiHash": "3d6fa830e7687fd236ee229edff0d15994319e898520fc82bc4e75ae1c3987ec",
+  "blockNumber": "12072244",
+  "blockTimestamp": "1793915376",
   "marketCount": "0",
   "runtimeHash": "0xa428c2a0ae99d4bd68a02aa893d5cc70698af0c82d478efa475e35adeee6555b",
   "expectedRuntimeHash": "0xa428c2a0ae99d4bd68a02aa893d5cc70698af0c82d478efa475e35adeee6555b",
   "runtimeMatches": true,
-  "verifiedAbiHash": "3d6fa830e7687fd236ee229edff0d15994319e898520fc82bc4e75ae1c3987ec",
-  "sourceCommit": "841002e57646285ae0bd5a31e9af3c08f4f4839d",
-  "readOnly": true
+  "coreAddress": "0x74665dAecA35A2303e767E76a2FF1FB6F93e119f",
+  "coreState": {
+    "settledThroughRound": "1973",
+    "cumulativeWork": "148986",
+    "cumulativeBlockUnits": "13095604188187",
+    "blockHeight": "13095",
+    "blockProgress": "604188187",
+    "workPerThousandBlocks": 11266,
+    "authorizationNonce": "1657",
+    "paused": false
+  },
+  "coreConfig": {
+    "streamId": "0xa0186b1a24b217f12f56c8574b492e286d00cd94bb5546cba45b048b19c60e44",
+    "genesisTimestamp": "1791847800",
+    "roundDuration": "600",
+    "maxWorkPerRound": "10000",
+    "maxRoundsPerBatch": 16,
+    "guardian": "0x0E1B21ED2fc5fc48E221D3E863f09589Cb490e73",
+    "reporter": "0xB317AB7Cc24fD5d94EA120B3b189bc6527a7d0Aa",
+    "initialWorkPerThousandBlocks": 10875,
+    "targetBlocksPerActiveRound": "40",
+    "difficultySmoothingRounds": "30",
+    "blockUnitsPerBlock": "1000000000"
+  },
+  "transactionsSent": 0
 }
