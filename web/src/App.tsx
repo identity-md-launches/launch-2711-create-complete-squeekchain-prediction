@@ -429,7 +429,7 @@ export default function App() {
             <p>
               {tab === "markets"
                 ? "The hamster runs. You call the outcome."
-                : "Every prediction. One clear view."}
+                : "Practice and Sepolia positions for your connected wallet."}
             </p>
           </div>
           <button
@@ -538,7 +538,9 @@ export default function App() {
                 }
                 const m = item.market;
                 const pools = practicePools(book, m.id);
-                const yesPercent = poolPercent(pools, true);
+                // Device-local stakes are not shared market odds.
+                const openingPools = { yesPool: 0n, noPool: 0n };
+                const yesPercent = poolPercent(openingPools, true);
                 const own = ownPractice.find((p) => p.market.id === m.id);
                 return (
                   <article className="market-card" key={m.id}>
@@ -582,7 +584,7 @@ export default function App() {
                             {yes ? "Yes" : "No"}
                           </span>
                           <strong className="num">
-                            {percentLabel(poolPercent(pools, yes))}
+                            {percentLabel(poolPercent(openingPools, yes))}
                           </strong>
                         </button>
                       ))}
@@ -602,7 +604,14 @@ export default function App() {
                       {own ? (
                         <a href="#positions" className="your-pick">
                           <Icon name="ticket" size={13} />
-                          Your position
+                          <span>
+                            Your stake{" "}
+                            {BigInt(own.yes) > 0n &&
+                              `${eth(BigInt(own.yes))} ETH Yes`}
+                            {BigInt(own.yes) > 0n && BigInt(own.no) > 0n && " + "}
+                            {BigInt(own.no) > 0n &&
+                              `${eth(BigInt(own.no))} ETH No`}
+                          </span>
                         </a>
                       ) : (
                         <span>SqueekCore block data</span>
@@ -639,7 +648,8 @@ export default function App() {
               <Icon name="shield" size={17} />
               <p>
                 Practice markets use virtual ETH and save on this device.
-                On-chain markets use Sepolia test ETH. Odds show the pool split.
+                Practice odds stay at 50/50. On-chain markets use Sepolia test
+                ETH; their odds show the pool split.
               </p>
               <button className="text-button" onClick={() => setHelpOpen(true)}>
                 Read the rules
@@ -972,8 +982,8 @@ export default function App() {
           <ol className="help-steps">
             <li>
               <strong>Pick your side.</strong> All markets have two outcomes.
-              Empty pools start at 50/50; percentages then reflect the share of
-              stakes on each side.
+              Practice odds stay at 50/50. On-chain pools start at 50/50;
+              percentages then reflect the share of stakes on each side.
             </li>
             <li>
               <strong>Practice or use Sepolia.</strong> Practice markets are

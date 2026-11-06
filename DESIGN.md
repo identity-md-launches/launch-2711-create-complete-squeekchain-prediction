@@ -6,7 +6,7 @@ Squeek Predict is a compact prediction-market board for Squeekchain activity. It
 
 The active source is `web/src/`; the static export is `dist/`. `App.tsx` renders Markets and My Positions with hash navigation. `catalog.ts` supplies twelve binary practice templates, and real verified open markets join the same board. Practice and on-chain data have separate labels, stakes and positions. There is no create-market surface. Historical modules are retained but are not imported by the active app.
 
-This document describes implemented source values, not an approved mockup or a claim of rendered inspection. Native browsers could not create a page on this machine. Source review, declared contrast calculations and DOM interaction evidence are recorded in `artifacts/validation.md`; responsive layouts and focus confinement remain unverified in a real browser.
+This document describes implemented source values, confirmed in local headless Chromium at 320/390/800/980/1440px. The six-domain review, interaction evidence and remaining limits are recorded in `artifacts/validation.md`. WebKit could not launch because system libraries are missing; physical devices, native zoom and screen-reader sessions remain unverified.
 
 ## Colors
 
@@ -33,11 +33,11 @@ Color is accompanied by words and icons: Yes has a check, No a cross, open state
 
 Practice submission uses a Yes fill with `#10251d` text, or No fill with `#30131b` text. The hover fills are `#88ebc5` and `#ffb6bf`. The status words and selected native radio remain explicit.
 
-`node web/scripts/check-colors.mjs` calculates declared solid pairs. White on the primary blue is **4.65:1**, muted metadata on cards **7.62:1**, Yes on its base fill **7.31:1**, No **6.51:1**, and input boundaries against cards **3.35:1**. These are source calculations; rendered backgrounds, opacity, forced-colors and all transient states were not measured. Full results are in `artifacts/contrast.json`.
+`node web/scripts/check-colors.mjs` calculates declared solid pairs. White on the primary blue is **4.65:1**, muted metadata on cards **7.62:1**, Yes on its base fill **7.31:1**, No **6.51:1**, and input boundaries against cards **3.35:1**. These numbers are source calculations (`artifacts/contrast.json`). The rendered board also passes the probe's resolved-background contrast check and the board/slip pass axe. Forced-colors, opacity/backdrops and every transient state are not exhaustively verified.
 
 ## Typography
 
-Local Inter Variable is served from `web/public/fonts/InterVariable.woff2`, preloaded in `web/index.html` and referenced from exported CSS with `../fonts/InterVariable.woff2`. Its OFL license is bundled alongside it. The face declares normal style, weights 100–900, and `font-display: swap`. The interface requests only **400, 500 and 600**, with `font-synthesis: none`; fallback order is `-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`. Actual font loading could not be observed in a browser.
+Local Inter Variable is served from `web/public/fonts/InterVariable.woff2`, preloaded in `web/index.html` and referenced from exported CSS with `../fonts/InterVariable.woff2`. Its OFL license is bundled alongside it. The face declares normal style, weights 100–900, and `font-display: swap`. The interface requests only **400, 500 and 600**, with `font-synthesis: none`; fallback order is `-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`. Chromium font checks and the five-size rendered probe pass with local assets.
 
 | Token | Implemented size | Usage |
 | --- | --- | --- |
@@ -55,18 +55,18 @@ Questions are complete, wrapping button labels, not line clamps. Long identifier
 
 Shared layout lives in `styles.css`. `.header-inner` and `.page` have a **1392px maximum border-box width** with **40px side padding** on desktop; this gives a 1312px content width. The footer aligns to a 1312px maximum width. Gaps use 4/8px for compact metadata, 10/12px within controls/cards, 14/16/18/20px between related elements, and 24/28/34/36/40px between larger groups.
 
-`.market-grid` uses `minmax(0,1fr)` columns and a **16px gap**. Cards are flex columns; the action row aligns across cards with `margin-top: auto`. The heading has a minimum height but remains free to grow with a long question. Filters precede the content they affect. Search and sort are not hidden on phones. Categories wrap; no horizontal scroller conceals options.
+`.market-grid` uses `minmax(0,1fr)` columns and a **16px gap**. Cards are flex columns; the action row aligns across cards with `margin-top: auto`. The heading has a minimum height but remains free to grow with a long question. Filters precede the content they affect. Search and sort are not hidden on phones. Categories can wrap at narrow widths; at 390px the four chips fit on one row, using 8px padding and no decorative chip icon. No horizontal scroller conceals options.
 
 | Width | Source-defined response |
 | --- | --- |
 | ≥1200px | Four market columns; one header row; 40px page gutters |
 | ≥1500px | Same capped content width, 40px top padding and 20px card padding |
 | ≤1199px | Three columns, 28px gutters, network label hidden from the crowded header |
-| ≤899px | Two columns; footer wraps; position row actions can wrap below the question |
-| ≤639px | One market column with 14px gaps, 20px gutters; nav moves below name/wallet; search becomes full-width with two selects beneath; categories wrap; phone sheets anchor to the bottom |
+| ≤899px | Two columns; footer wraps; position questions reserve the row beside their art, putting actions below; header help stays available |
+| ≤639px | One market column with 14px gaps, 20px gutters; nav moves below name/help/wallet; 44×44px help target and 8px wallet padding; full-width search with two selects beneath; compact categories fit one row at 390px; phone sheets anchor to the bottom |
 | ≤359px | 16px gutters; compact wordmark and existing 12px wallet-label token; questions get more minimum height |
 
-The first phone screen is deliberately compact: no marketing hero, account sidebar or creation prompt precedes the market. Both side actions are normal-flow buttons. There is no fixed bottom navigation covering content and no global overflow hiding. This structure is intended to show a market and its main action at 390×844; that exact rendered condition remains **unverified** because native browsers failed before loading a page.
+The first phone screen is deliberately compact: no marketing hero, account sidebar or creation prompt precedes the market. Both side actions are normal-flow buttons. There is no fixed bottom navigation covering content and no global overflow hiding. At 390×844 in Chromium, the first card and both 48px side buttons are visible; the buttons end at approximately y=643px. The same header row fits the brand, help and connected address at that width.
 
 Positions use a three-column summary on desktop, two columns plus a full-width practice total on phones. Practice positions are readable rows with question, state and separately written side stakes. On-chain positions retain cards and direct claim controls. Empty/filter/error states provide a next action. Hash navigation scrolls to the top and focuses `main`.
 
@@ -87,12 +87,12 @@ Surfaces are flat, with a tonal fill and a single structural border; there are n
 | `App.tsx` | Markets/My Positions, hash navigation, search/category/type filters, global sorting, live snapshot and template composition. Twelve cards by default. RPC errors preserve practice; public data remains stable across connection while account positions clear. |
 | `catalog.ts` | Twelve fixed binary questions, UTC window rotation, frozen saved positions, address-scoped practice storage, exact bigint pool math, input validation and safe storage parsing. No template is given an invented on-chain market ID. |
 | `MarketCard.tsx` | Real market question, art, actual pool split/volume, phase/time, side buttons, position and claim/refund/resolution actions. `onOpen` chooses a side or details. Real cards always identify Sepolia and their actual contract ID. |
-| Practice card in `App.tsx` | Same question/odds/action hierarchy. Props come from `TemplateMarket` and actual local practice pools. A Practice label and Your position link distinguish provenance and ownership. |
+| Practice card in `App.tsx` | Same question/odds/action hierarchy. Questions/windows come from `TemplateMarket`; odds use an empty pool to keep the 50/50 opening line. Device-local volume remains separate. Practice and Your stake labels identify mode, amount and side(s); the stake link opens positions. |
 | `MarketArt.tsx` | Small original hamster, blocks, bolt, moon, chart and wheel SVGs. Decorative, `aria-hidden`, one stroke system; no remote artwork dependency. |
-| `PracticeDialog.tsx` | Native side radios, precise amount, quick amounts, honest pool estimate, before-submit virtual-ETH disclosure, rules/dates, visible validation. Success offers View my positions/Keep exploring and discloses failed persistence. Connection retains the draft. |
+| `PracticeDialog.tsx` | Native side radios keep 50/50 opening odds independently of saved stakes. Precise amount, quick amounts, explicitly local return estimate, before-submit virtual-ETH disclosure, rules/dates and visible validation. Success offers View my positions/Keep exploring and discloses failed persistence. Connection retains the draft. |
 | `MarketDialog.tsx` | Existing real-money-in-testnet flow: stake validation, pool estimate, simulation/wallet/receipt notices, wrong-chain disablement, claims, refunds and resolution. Exact pool/rule details remain available. |
 | `Wallet.tsx`, `open-in.ts` | Existing EIP-6963 named extensions, four mobile browser links, Coinbase Wallet/Smart Wallet, account/disconnect and switch/add Sepolia. Official marks remain local; no relay/project ID. |
-| `Modal.tsx` | Named native dialog, close button, Escape/backdrop close, scroll preservation and focus return. A wallet dialog can open above a slip. Native inertness/focus confinement was not verified in the DOM emulator. |
+| `Modal.tsx` | Named native dialog, close button, Escape/backdrop close, scroll preservation and focus return. A wallet dialog can open above a slip. Chromium confirms background controls are inert and Escape restores the trigger; Tab can visit browser chrome before returning to the dialog. |
 | Shared CSS | `.primary`, `.secondary`, `.text-button`, `.icon-button`, `.search-field`, `.amount-field`, `.side-choice`, `.category-chip`, `.empty`, `.position-summary`, `.position-row`. Hover, pressed, focus, selected, disabled, pending and recoverable error states have explicit styles/copy. |
 
 Market side buttons are at least 46px tall on desktop and 48px on phones. Wallet rows are at least 56px; modal close targets are 44px; compact categories remain at least 36px. Native buttons/links/inputs are used rather than clickable divs. The skip link precedes header navigation. Focus is a 2px `--focus` outline offset by 3px, with the same treatment on a radio's wrapping label. Forced-colors mode uses system Highlight.
@@ -107,6 +107,7 @@ Transitions only run under `prefers-reduced-motion: no-preference`, naming backg
 - Use `Modal` and native form controls; retain names, keyboard paths, precise amounts and readable errors.
 - Keep normal-case labels and full wrapping questions. Extend spacing rather than clip critical text.
 - Use hash navigation, bundle runtime assets, rebuild `dist/`, and recheck the subpath export after source changes.
-- Treat this document's responsive behavior as source-defined until it has been inspected in an actual browser; the DOM emulator cannot certify layout or accessibility.
+- Keep practice opening odds independent of local stakes. Preserve real on-chain pool percentages and explicit source labels.
+- Recheck representative widths after layout changes; Chromium evidence does not certify Safari, screen readers or physical devices.
 
 Guidance attribution and licenses remain in `THIRD_PARTY.md` and `docs/DESIGN_GUIDANCE_LICENSE.txt`. The local Inter license and official wallet-mark notices accompany their assets. `share.svg` is the editable source for the 1200×630 social PNG, which is artwork rather than a product screenshot.

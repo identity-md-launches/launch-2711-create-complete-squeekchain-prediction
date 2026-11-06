@@ -160,6 +160,13 @@ try {
       );
       await noOverflow(p);
       assert.ok(await p.evaluate(() => document.fonts.check("16px Inter")));
+      assert.ok(await p.locator(".help-button").isVisible());
+      if (width === 390) {
+        const rows = await p.locator(".category-chip").evaluateAll((chips) =>
+          chips.map((chip) => chip.getBoundingClientRect().y),
+        );
+        assert.equal(new Set(rows).size, 1, "phone categories fit in one row");
+      }
       for (const side of [".odds-yes", ".odds-no"]) {
         const r = await p.locator(side).first().boundingBox();
         assert.ok(r.height >= 44);
@@ -221,6 +228,8 @@ try {
     await slip.getByRole("link", { name: "View my positions" }).click();
     await p.locator(".position-row").getByText("No · 0.005 ETH").waitFor();
     await p.reload();
+    // The test provider resets its authorization on each document load.
+    await connect(p);
     await p.locator(".position-row").getByText("No · 0.005 ETH").waitFor();
     await noOverflow(p);
     await p.screenshot({
@@ -247,6 +256,55 @@ try {
       path: `${shots}/bet-slip-390.png`,
       animations: "disabled",
     });
+  });
+  await test("Local practice stakes never change opening odds on cards or slips", async () => {
+    const p = await page(390);
+    await connect(p);
+    const card = p.locator(".market-card").first();
+    for (const [side, stake] of [["Yes", "0.001"], ["No", "0.005"]]) {
+      await card.locator(`.odds-${side.toLowerCase()}`).click();
+      const slip = p.locator(".practice-slip");
+      assert.deepEqual(await slip.locator(".side-choice strong").allTextContents(), ["50%", "50%"]);
+      await slip.locator("#practice-stake").fill(stake);
+      await slip.getByRole("button", { name: `Place ${side} prediction` }).click();
+      await slip.getByText(`You’re backing ${side}`).waitFor();
+      await slip.getByRole("button", { name: "Keep exploring" }).click();
+      assert.equal(await card.locator(".card-odds strong").innerText(), "50%");
+      assert.deepEqual(await card.locator(".odds strong").allTextContents(), ["50%", "50%"]);
+      assert.match(await card.locator(".your-pick").innerText(), /Your stake 0.001 ETH Yes/);
+    }
+    assert.match(await card.locator(".your-pick").innerText(), /Your stake 0.001 ETH Yes \+ 0.005 ETH No/);
+    await p.reload();
+    await connect(p);
+    await card.locator(".your-pick").waitFor();
+    assert.deepEqual(await card.locator(".odds strong").allTextContents(), ["50%", "50%"]);
+    await noOverflow(p);
+    await p.screenshot({ path: `${shots}/practice-stakes-390.png`, animations: "disabled" });
+    await card.locator(".your-pick").click();
+    await p.getByRole("heading", { name: "My Positions", exact: true }).waitFor();
+    assert.equal(await p.locator(".page-heading p").innerText(), "Practice and Sepolia positions for your connected wallet.");
+    for (const width of [320, 390, 800]) {
+      await p.setViewportSize({ width, height: 844 });
+      const question = await p.locator(".position-question").first().boundingBox();
+      const action = await p.locator(".position-row > .secondary").first().boundingBox();
+      assert.ok(question.width > width / 2, "position question has room to wrap");
+      assert.ok(action.y >= question.y + question.height, "position action sits below its question");
+      await noOverflow(p);
+    }
+    await p.setViewportSize({ width: 390, height: 844 });
+    await p.screenshot({ path: `${shots}/positions-stakes-390.png`, animations: "disabled" });
+    assert.equal(fixture.transactions.length, 0);
+  });
+  await test("Header help is available on phones and returns keyboard focus", async () => {
+    const p = await page(390);
+    const help = p.locator(".help-button");
+    const bounds = await help.boundingBox();
+    assert.ok(bounds.width >= 44 && bounds.height >= 44);
+    await help.focus();
+    await p.keyboard.press("Enter");
+    await p.locator(".help-steps").waitFor();
+    await p.keyboard.press("Escape");
+    assert.ok(await help.evaluate((el) => document.activeElement === el));
   });
   await test("Live pools and actual bet calldata with rejection/retry", async () => {
     const p = await page(390, true);
@@ -279,7 +337,7 @@ try {
       .locator(".claim-row")
       .getByRole("button", { name: "Claim", exact: true })
       .click();
-    await p.getByText("Winnings from market #4 claimed.").waitFor();
+    await p.locator(".transaction-notice").getByText("Winnings from market #4 claimed.").waitFor();
     await p
       .locator(".main-nav")
       .getByRole("link", { name: "Markets", exact: true })
@@ -311,8 +369,11 @@ try {
     await trigger.focus();
     await p.keyboard.press("Enter");
     const slip = p.locator(".practice-slip");
+    await slip.waitFor();
     await p.keyboard.press("Tab");
     assert.ok(await slip.evaluate((el) => el.contains(document.activeElement)));
+    await trigger.evaluate((el) => el.focus());
+    assert.ok(await slip.evaluate((el) => el.contains(document.activeElement)), "background controls remain inert");
     await p.screenshot({
       path: `${shots}/focus-390.png`,
       animations: "disabled",
@@ -320,7 +381,11 @@ try {
     for (let i = 0; i < 20; i++) {
       await p.keyboard.press("Tab");
       assert.ok(
-        await slip.evaluate((el) => el.contains(document.activeElement)),
+        await slip.evaluate((el) =>
+          el.contains(document.activeElement) ||
+          (!document.hasFocus() && document.activeElement === document.body),
+        ),
+        "Tab stays in the dialog or visits browser chrome, never page content",
       );
     }
     await p.keyboard.press("Escape");

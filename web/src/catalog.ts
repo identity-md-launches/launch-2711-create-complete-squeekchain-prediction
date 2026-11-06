@@ -42,7 +42,7 @@ export const TEMPLATES: readonly Template[] = [
   },
   {
     key: "daily-500",
-    question: "Will Squeekchain add over 500 blocks in 24 hours?",
+    question: "Will the hamster complete over 500 blocks in 24 hours?",
     category: "Daily blocks",
     threshold: 500,
     hours: 24,
@@ -78,7 +78,7 @@ export const TEMPLATES: readonly Template[] = [
   },
   {
     key: "weekly-10000",
-    question: "Will Squeekchain add over 10,000 blocks in 7 days?",
+    question: "Will the hamster complete over 10,000 blocks in 7 days?",
     category: "Weekly blocks",
     threshold: 10000,
     hours: 168,
@@ -114,7 +114,7 @@ export const TEMPLATES: readonly Template[] = [
   },
   {
     key: "weekly-1000",
-    question: "Will Squeekchain add over 1,000 blocks in 7 days?",
+    question: "Will the hamster complete over 1,000 blocks in 7 days?",
     category: "Weekly blocks",
     threshold: 1000,
     hours: 168,

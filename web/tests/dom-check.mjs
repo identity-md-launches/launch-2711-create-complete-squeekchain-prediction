@@ -249,7 +249,7 @@ try {
       /Exactly 1,000 is No/,
     );
   });
-  await test("Connect preserves No draft; practice bet updates odds, volume and positions without a transaction", async () => {
+  await test("Connect preserves No draft; practice bet keeps opening odds and saves stake, volume and positions without a transaction", async () => {
     const win = await page();
     await click(win.document.querySelector(".odds-no"));
     let slip = win.document.querySelector(".practice-slip");
@@ -281,7 +281,15 @@ try {
     );
     assert.equal(
       win.document.querySelector(".market-card .odds-no strong").textContent,
-      "100%",
+      "50%",
+    );
+    assert.equal(
+      win.document.querySelector(".market-card .card-odds strong").textContent,
+      "50%",
+    );
+    assert.match(
+      text(win, ".market-card:first-child .your-pick"),
+      /Your stake 0.005 ETH No/,
     );
     const saved = JSON.parse(
       win.localStorage.getItem("squeek-predict-practice-v1"),
@@ -296,29 +304,39 @@ try {
       () => text(win, ".position-list").includes("No · 0.005 ETH"),
       "position",
     );
+    assert.equal(
+      text(win, ".page-heading p"),
+      "Practice and Sepolia positions for your connected wallet.",
+    );
     win.testWallet.setAccount(OTHER);
     await wait(
       () => !win.document.querySelector(".position-row"),
       "account isolation",
     );
   });
-  await test("Opposing practice bets change odds to 50/50 and volume sorting prioritizes their market", async () => {
+  await test("Practice stakes on both sides keep 50/50 opening odds and volume sorting prioritizes their market", async () => {
     const win = await page();
     await connect(win);
     const card = all(win, ".market-card")[2];
     const question = card.querySelector("h2").textContent;
     for (const side of ["yes", "no"]) {
       await click(card.querySelector(`.odds-${side}`));
+      assert.deepEqual(
+        all(win, ".practice-slip .side-choice strong").map((el) => el.textContent),
+        ["50%", "50%"],
+      );
       win.document.querySelector(".practice-slip form").requestSubmit();
       await wait(
         () => win.document.querySelector(".success-state"),
         "prediction",
       );
       await click(button(win, "Keep exploring"));
+      assert.equal(card.querySelector(".card-odds strong").textContent, "50%");
     }
     assert.equal(card.querySelector(".odds-yes strong").textContent, "50%");
     assert.equal(card.querySelector(".odds-no strong").textContent, "50%");
     assert.match(card.textContent, /0.002 ETH vol/);
+    assert.match(card.textContent, /Your stake 0.001 ETH Yes \+ 0.001 ETH No/);
     const sort = win.document.querySelector('[aria-label="Sort markets"]');
     sort.value = "volume";
     sort.dispatchEvent(new win.Event("change", { bubbles: true }));

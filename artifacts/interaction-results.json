@@ -15,11 +15,11 @@
       "passed": true
     },
     {
-      "name": "Connect preserves No draft; practice bet updates odds, volume and positions without a transaction",
+      "name": "Connect preserves No draft; practice bet keeps opening odds and saves stake, volume and positions without a transaction",
       "passed": true
     },
     {
-      "name": "Opposing practice bets change odds to 50/50 and volume sorting prioritizes their market",
+      "name": "Practice stakes on both sides keep 50/50 opening odds and volume sorting prioritizes their market",
       "passed": true
     },
     {
@@ -54,6 +54,5 @@
       "name": "Initial RPC failure retains all ready practice cards and permits a practice prediction",
       "passed": true
     }
-  ],
-  "rpcAndWallet": "Mocked. No keys, signatures or chain broadcasts."
+  ]
 }

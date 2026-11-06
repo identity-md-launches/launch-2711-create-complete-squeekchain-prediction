@@ -29,7 +29,7 @@ A fresh read on **2026-11-06**, at Sepolia block **12075955**, verified the depl
 
 The homepage therefore opens with **12 practice template markets**, rather than asking visitors to create one. They cover completed-block totals and activity in one hour, six hours, 24 hours and seven days, including the explicit 00:00–06:00 UTC overnight window. All are binary questions verifiable from SqueekCore block history. These are editorial thresholds, not fabricated observations or invented contract market IDs.
 
-Practice cards are visibly marked **Practice**. Their stakes are **virtual ETH**; they never request a signature, debit a wallet or promise redeemable winnings. Pools, percentages, volume and positions come only from saved bets in this browser. They are not shared with other visitors. A connected wallet address separates its positions from other accounts on the same device. The app does not invent a wallet balance or pretend there is external liquidity.
+Practice cards are visibly marked **Practice**. Their stakes are **virtual ETH**; they never request a signature, debit a wallet or promise redeemable winnings. Practice odds stay at **50% / 50%**, including after placing a prediction and reopening its slip. Saved stakes and practice volume are local to this browser, not shared with other visitors. The card shows **Your stake**, its amount and side separately from the opening odds. A connected wallet address separates its positions from other accounts on the same device. The app does not invent a wallet balance or pretend there is external liquidity.
 
 Real open markets from the existing contract automatically join the board and are marked **On-chain · Sepolia**. Featured ordering prioritizes them; templates fill the board to 12 cards. Category, search and market-type filters apply before the 12-card limit. Closing-time and volume sorts compare both types. A filtered view may have fewer than 12 results.
 
@@ -40,7 +40,7 @@ Real open markets from the existing contract automatically join the board and ar
 3. Use a quick amount or enter a precise amount. Practice submission saves immediately; a real Sepolia bet requires a verified chain read, simulation, wallet approval and a successful receipt. Both enforce a 0.0001 ETH minimum and a 100 ETH aggregate side limit in their respective pools.
 4. Open **My Positions** to see separate practice and on-chain stakes. Practice results wait for certified endpoints and have no cash claim. On-chain winnings and refunds can be claimed to the connected wallet; the details dialog also supports a chosen receiving wallet. On-chain totals explicitly cover loaded markets; **Load older positions** expands that set.
 
-Empty markets show **50% / 50%**. After bets, the percentages are shares of their respective pool, not fixed share prices or guaranteed probabilities. Payout estimates include the proposed and previous same-side stake. Opposing stakes are required for winnings. There is no platform fee or early cash-out; on-chain bets are final and can lose their stake.
+Empty on-chain markets show **50% / 50%**. After on-chain bets, their percentages reflect the shared contract pool, not fixed share prices or guaranteed probabilities. Practice cards and slips keep the 50/50 opening line regardless of device-local stakes. Practice return estimates only illustrate local pool arithmetic and have no redeemable value; an unmatched position says “Needs opposing bets”. Payout estimates include the proposed and previous same-side stake. There is no platform fee or early cash-out; on-chain bets are final and can lose their stake.
 
 ### Windows, storage and resolution
 
@@ -68,11 +68,13 @@ Snapshots refresh every 30 seconds at a single Ethereum block. Failed refreshes 
 Checks run for this revision:
 
 - Production build and TypeScript typecheck: **passed**.
-- `npm test`: **28/28 passed**, including six new catalogue/persistence/pool tests and the retained contract-math tests.
+- `npm test`: **28/28 passed**, including catalogue/persistence/pool tests and the retained contract-math tests.
 - DOM integration: **13/13 scenarios passed**, exercising the actual React app with mocked RPC and EIP-6963 providers. Coverage includes filters, draft preservation, virtual betting, exact real-bet calldata, rejection/retry, claims, account isolation, network switching, storage failure, persistence, certified results and RPC failure. No real signatures or broadcasts.
 - Declared opaque color-pair calculation: **15/15 passed** after correcting primary button contrast. This is a source calculation, not rendered contrast measurement.
-- ABI/deployment proof: **passed**; fresh real public reads matched the expected runtime and returned zero markets.
-- The pinned design probe and the real-browser suite were **attempted but could not render**. Supplied Chromium failed at launch; local Chromium also exited with SIGTRAP. Firefox could not locate its application directory. WebKit initially lacked libraries; after supplying temporary test libraries it launched but closed before creating a page. Consequently no new page screenshots, native focus/overflow measurements or browser axe scans are claimed.
+- Retained ABI/deployment proof and public-read snapshot: the previous round passed verification and observed zero markets. This focused revision preserves that evidence and does not claim a new live-chain observation.
+- Chromium interaction suite: **11/11 passed** against the production export at a gateway-like `/preview/` subpath. Includes unchanged 50/50 practice odds after Yes and No stakes and reload, explicit stake labels, phone help, filters, fixture transactions/claims, native keyboard focus, reduced motion and axe scans. Board layouts were checked at 320/390/800/980/1440px; populated positions at 320/390/800px.
+- Pinned `taste@1` probe: **16/16 passed** on the final export at 320/390/1440px. The 390px screenshot shows both 48px side buttons on the first screen; the category chips fit on one row and header help remains available. [Screenshots and reports](artifacts/validation.md) record the review.
+- The supplied browser tool could not initialize Chrome. Local Playwright headless Chromium worked. **WebKit could not launch because its required system libraries are missing**; Safari and physical devices remain unverified. No real wallet signature, passkey or app handoff was performed.
 
 To repeat the browser checks on a machine with a usable browser runtime, from `web/`:
 
@@ -82,7 +84,9 @@ npm run test:browser
 ENGINE=webkit npm run test:browser
 ```
 
-The suite serves the finished `dist/` at `/preview/` inside one bounded process and closes its server/browser afterwards. It checks 320/390/800/980/1440px layouts, first-phone-screen actions, filters, practice persistence, real transaction fixtures, mobile wallet rows, native keyboard focus, reduced motion and axe. It writes disposable screenshots/results under `test/scratch/`; none are production fixtures.
+The suite serves the finished `dist/` at `/preview/` inside one bounded process and closes its server/browser afterwards. It writes disposable screenshots/results under `test/scratch/`; none are production fixtures. Selected final evidence is retained in `artifacts/revision/`. Reload checks explicitly reconnect the test wallet, whose fixture intentionally resets authorization with each new document.
+
+For this bounded revision, dependencies were installed from the unchanged `web/package.json` and lockfile into a copy at `test/scratch/site/`, keeping generated packages entirely in scratch. `npm ci`, `npm run build`, `npm run typecheck` and `npm test` ran there against identical source/configuration. Its finished export was copied to root `dist/` and checked there by the probe and targeted reproduction. The documented normal install workflow above produces the same site.
 
 The supplemental DOM emulator requires an optional test dependency, installed only into scratch. From the repository root:
 
@@ -103,7 +107,7 @@ IMD_PLAYWRIGHT="$PWD/web/node_modules/playwright/index.mjs" node .imd/reads/skil
 
 The production build retains Vite's wallet-bundle size advisory and a warning about the intentional `../fonts/InterVariable.woff2` public URL. The asset audit confirms that this relative font URL resolves in the export. Font, source, SVG/PNG social card, wallet marks and licenses remain complete. The final conservative submission-byte count and protected-path check are in [artifacts/export-audit.json](artifacts/export-audit.json).
 
-`node web/scripts/render-share.mjs` can regenerate `web/public/share.png` from the local SVG/font on a browser-capable machine; rebuild afterwards. In this run, the social PNG was rasterized from `share.svg` with a disposable SVG renderer and DejaVu Sans fallback because Chromium could not start. This is share artwork, not a screenshot of the website.
+`node web/scripts/render-share.mjs` can regenerate `web/public/share.png` from the local SVG/font; rebuild afterwards. The retained social PNG was rasterized in the previous round from `share.svg` with a disposable SVG renderer and DejaVu Sans fallback. This revision preserves it. It is share artwork, not a screenshot of the website.
 
 ## Contract development
 
@@ -116,7 +120,7 @@ forge fmt --check
 node --test test/frontend.test.cjs
 ```
 
-The existing Solidity suites use local Core fixtures; no fork or private key is needed. The retained deployment proof contains the original compiled ABI and bytecode. This revision checked it with `npm run verify:deployment`; it did not rebuild contracts or rerun the Solidity suites. See [test/TESTING.md](test/TESTING.md) for their existing coverage.
+The existing Solidity suites use local Core fixtures; no fork or private key is needed. The retained deployment proof contains the original compiled ABI and bytecode. The previous round checked it with `npm run verify:deployment`; this revision does not rebuild contracts or rerun the Solidity suites. See [test/TESTING.md](test/TESTING.md) for their existing coverage.
 
 ## Exact question and time boundaries
 

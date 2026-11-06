@@ -1,0 +1,84 @@
+{
+  "phase": "final",
+  "layout": {
+    "categories": [
+      {
+        "label": "All markets",
+        "y": 340.984375,
+        "width": 83
+      },
+      {
+        "label": "Daily blocks",
+        "y": 340.984375,
+        "width": 88
+      },
+      {
+        "label": "Activity",
+        "y": 340.984375,
+        "width": 60
+      },
+      {
+        "label": "Weekly blocks",
+        "y": 340.984375,
+        "width": 103
+      }
+    ],
+    "helpVisible": true,
+    "helpRect": {
+      "x": 241,
+      "y": 16,
+      "width": 44,
+      "height": 44,
+      "top": 16,
+      "right": 285,
+      "bottom": 60,
+      "left": 241
+    },
+    "header": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 117,
+      "top": 0,
+      "right": 390,
+      "bottom": 117,
+      "left": 0
+    },
+    "firstAction": {
+      "x": 39,
+      "y": 594.578125,
+      "width": 151,
+      "height": 48,
+      "top": 594.578125,
+      "right": 190,
+      "bottom": 642.578125,
+      "left": 39
+    },
+    "questions": [
+      "Will the hamster complete over 1,000 blocks in 24 hours?",
+      "Will the hamster complete over 50 blocks in one hour?",
+      "Will the hamster complete over 500 blocks in 24 hours?",
+      "Will the hamster complete over 5,000 blocks in 7 days?",
+      "Will the hamster complete over 250 blocks in 6 hours?",
+      "Will the hamster complete at least one block in 24 hours?",
+      "Will the hamster complete over 10,000 blocks in 7 days?",
+      "Will the hamster complete over 500 blocks overnight?",
+      "Will the hamster complete over 2,000 blocks in 24 hours?",
+      "Will the hamster complete at least one block in one hour?",
+      "Will the hamster complete over 1,000 blocks in 7 days?",
+      "Will the hamster complete over 1,000 blocks in 6 hours?"
+    ],
+    "horizontalOverflow": false
+  },
+  "initialReturn": "Potential practice return\nNeeds opposing bets\nPlatform fee\n0%",
+  "afterYes": {
+    "headline": "50%",
+    "yes": "50%",
+    "no": "50%",
+    "own": "Practice\nYour stake 0.001 ETH Yes"
+  },
+  "reopenedSlip": "Choose a side\nYes\n50%\nNo\n50%",
+  "positionsIntro": "Practice and Sepolia positions for your connected wallet.",
+  "transactions": 0,
+  "dataSource": "Deterministic test-only RPC and EIP-6963 wallet fixtures; no real signatures, broadcasts or live-chain observation."
+}

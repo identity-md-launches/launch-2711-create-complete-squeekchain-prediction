@@ -43,6 +43,7 @@ export function PracticeDialog({
   const [persisted, setPersisted] = useState(true);
   const field = useRef<HTMLInputElement>(null);
   const pools = practicePools(book, m.id);
+  const openingPools = { yesPool: 0n, noPool: 0n };
   const previous = book.positions.find(
     (p) =>
       p.market.id === m.id &&
@@ -146,7 +147,7 @@ export function PracticeDialog({
                   {side ? "Yes" : "No"}
                 </span>
                 <strong className="num">
-                  {percentLabel(poolPercent(pools, side))}
+                  {percentLabel(poolPercent(openingPools, side))}
                 </strong>
               </label>
             ))}

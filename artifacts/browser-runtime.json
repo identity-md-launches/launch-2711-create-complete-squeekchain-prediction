@@ -1,19 +1,85 @@
 {
-  "nativeRenderingPerformed": false,
+  "nativeRenderingPerformed": true,
   "suite": {
     "engine": "chromium",
     "results": [
       {
-        "name": "chromium runtime launch",
-        "passed": false,
-        "error": "browserType.launch: Target page, context or browser has been closed"
+        "name": "Twelve cards, relative assets, metadata and product/action on the first 390 screen",
+        "passed": true
+      },
+      {
+        "name": "Category/search/type/sort filters and empty recovery",
+        "passed": true
+      },
+      {
+        "name": "No bet preserves draft through wallet connection and persists in My Positions",
+        "passed": true
+      },
+      {
+        "name": "Invalid practice amounts remain editable and cannot submit",
+        "passed": true
+      },
+      {
+        "name": "Local practice stakes never change opening odds on cards or slips",
+        "passed": true
+      },
+      {
+        "name": "Header help is available on phones and returns keyboard focus",
+        "passed": true
+      },
+      {
+        "name": "Live pools and actual bet calldata with rejection/retry",
+        "passed": true
+      },
+      {
+        "name": "Claims work and wrong-chain betting is disabled",
+        "passed": true
+      },
+      {
+        "name": "Phone wallet links, named desktop extension and no generic injected label",
+        "passed": true
+      },
+      {
+        "name": "Keyboard focus, native modal trap and Escape focus return",
+        "passed": true
+      },
+      {
+        "name": "Axe scans of board and slip; reduced motion and resource failures",
+        "passed": true
       }
     ]
   },
+  "viewports": [
+    320,
+    390,
+    800,
+    980,
+    1440
+  ],
+  "positionsViewports": [
+    320,
+    390,
+    800
+  ],
+  "dataSource": "Deterministic test-only RPC/wallet fixtures for the interaction suite; no real signatures or broadcasts.",
   "otherAttempts": {
-    "suppliedBrowserTool": "Chromium crashpad initialization failure",
-    "Firefox": "Could not find the application directory",
-    "WebKit": "Closed before a page could be created, after temporary missing libraries were provided"
+    "suppliedBrowserTool": "Chrome failed during initialization before loading a page.",
+    "WebKit": "Could not launch; required system libraries, including GTK4 and GStreamer, are missing."
   },
-  "screenshots": []
+  "limitations": [
+    "Safari/WebKit",
+    "Physical devices",
+    "Browser-native 200% zoom",
+    "Screen-reader session",
+    "Real wallet passkeys and mobile app handoff",
+    "Real signed transactions",
+    "Exhaustive transient-state and forced-colors contrast"
+  ],
+  "screenshots": [
+    "artifacts/revision/markets-390.png",
+    "artifacts/revision/after-yes-390.png",
+    "artifacts/revision/positions-390.png",
+    "artifacts/revision/markets-1440.png",
+    "artifacts/revision/focus-390.png"
+  ]
 }

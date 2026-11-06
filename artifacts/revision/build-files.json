@@ -1,0 +1,90 @@
+{
+  "files": [
+    {
+      "path": "dist/assets/ccip-BgsAY5Jb.js",
+      "bytes": 2888,
+      "sha256": "5079de33c9f25c0e5c4159db15c2263e501063d9f0ff047ade19adf1745a18c4"
+    },
+    {
+      "path": "dist/assets/index-C6K4am7o.js",
+      "bytes": 657581,
+      "sha256": "fde313c7f182cbd622f5cf02fdaebcaff36449c15aadbe9f3aa19e377fd81e84"
+    },
+    {
+      "path": "dist/assets/index-CH_3R9uC.css",
+      "bytes": 27365,
+      "sha256": "4a126dee182accf1e4571fdbe8a3c35851a7ce73986b528a45fa5ee9403a231e"
+    },
+    {
+      "path": "dist/assets/index-LnGhZ0Wx.js",
+      "bytes": 109915,
+      "sha256": "ee4d4d64e4c91d545f2355f987b1bd99514509a0aa8098d7b0143a42f6732f59"
+    },
+    {
+      "path": "dist/favicon.svg",
+      "bytes": 334,
+      "sha256": "58007521e82bf064c4cfd99926d4d35c9e69a18ad6a2bf6c80730b5dd51ffd95"
+    },
+    {
+      "path": "dist/fonts/InterVariable.woff2",
+      "bytes": 352240,
+      "sha256": "693b77d4f32ee9b8bfc995589b5fad5e99adf2832738661f5402f9978429a8e3"
+    },
+    {
+      "path": "dist/fonts/LICENSE-Inter.txt",
+      "bytes": 4380,
+      "sha256": "262481e844521b326f5ecd053e59b98c8b2da78c8ee1bdbb6e8174305e54935a"
+    },
+    {
+      "path": "dist/hamster-neon-wheel.svg",
+      "bytes": 3158,
+      "sha256": "a3fe5b5af7fd5bdc1c7984d8c127251ad059bf8bdce1729cb87d70f89680581c"
+    },
+    {
+      "path": "dist/index.html",
+      "bytes": 1611,
+      "sha256": "a178090e3aeb84aa1a9cf8e177707ca6b46c6f41944cb213319d9f2592311a5e"
+    },
+    {
+      "path": "dist/marks/LICENSE-Coinbase.txt",
+      "bytes": 564,
+      "sha256": "52c9940fbc5cb33de73787e6d3e5cf6697d8e3aabab22fb85c609a574fcacaf1"
+    },
+    {
+      "path": "dist/marks/LICENSE-RainbowKit.txt",
+      "bytes": 1064,
+      "sha256": "5095037afa1ba03be36e04305c01ec9ee600e14377738a026482b1a888c4e365"
+    },
+    {
+      "path": "dist/marks/coinbase.svg",
+      "bytes": 542,
+      "sha256": "ab2d64bdbb8f4ffdcbfdb04167f622d4ac64bbcade1a1bc937761478f1efa62f"
+    },
+    {
+      "path": "dist/marks/metamask.svg",
+      "bytes": 1665,
+      "sha256": "892c7dfab8c4ca5682878dda3f42f55a75195d7d365e4adb0832845f3a0a2135"
+    },
+    {
+      "path": "dist/marks/phantom.svg",
+      "bytes": 861,
+      "sha256": "f841f8112e131259a2e5123177950099c79487e61e77971f4e193e6c374419eb"
+    },
+    {
+      "path": "dist/marks/rabby.svg",
+      "bytes": 2290,
+      "sha256": "dcae4de88ebfa10cffa1fe28df13d7c8c0b40736ef2b704f1f2fc348e777e443"
+    },
+    {
+      "path": "dist/share.png",
+      "bytes": 51680,
+      "sha256": "28273266e622bf931deec75ce64493dea18f15b80a042be6dadb71fe1acd3bf7"
+    },
+    {
+      "path": "dist/share.svg",
+      "bytes": 2817,
+      "sha256": "ece4a50385d478c18a431a4e174435292c7949ae7950a65d754b337aefb4bdf5"
+    }
+  ],
+  "exportBytes": 1220955
+}
