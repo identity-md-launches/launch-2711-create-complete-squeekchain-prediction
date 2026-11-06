@@ -1,0 +1,19 @@
+{
+  "nativeRenderingPerformed": false,
+  "suite": {
+    "engine": "chromium",
+    "results": [
+      {
+        "name": "chromium runtime launch",
+        "passed": false,
+        "error": "browserType.launch: Target page, context or browser has been closed"
+      }
+    ]
+  },
+  "otherAttempts": {
+    "suppliedBrowserTool": "Chromium crashpad initialization failure",
+    "Firefox": "Could not find the application directory",
+    "WebKit": "Closed before a page could be created, after temporary missing libraries were provided"
+  },
+  "screenshots": []
+}

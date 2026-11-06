@@ -1,5 +1,5 @@
 {
-  "observedAt": "2026-11-05T21:49:42.202Z",
+  "observedAt": "2026-11-06T10:24:05.674Z",
   "sources": [
     "https://ethereum-sepolia-rpc.publicnode.com",
     "https://rpc.sepolia.ethpandaops.io",
@@ -9,8 +9,8 @@
   "address": "0x8bd658e58e94ab6a18a8b9d8c6108d1287facacf",
   "sourceCommit": "841002e57646285ae0bd5a31e9af3c08f4f4839d",
   "abiHash": "3d6fa830e7687fd236ee229edff0d15994319e898520fc82bc4e75ae1c3987ec",
-  "blockNumber": "12072244",
-  "blockTimestamp": "1793915376",
+  "blockNumber": "12075955",
+  "blockTimestamp": "1793960640",
   "marketCount": "0",
   "runtimeHash": "0xa428c2a0ae99d4bd68a02aa893d5cc70698af0c82d478efa475e35adeee6555b",
   "expectedRuntimeHash": "0xa428c2a0ae99d4bd68a02aa893d5cc70698af0c82d478efa475e35adeee6555b",

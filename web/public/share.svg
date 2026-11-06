@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+<rect width="1200" height="630" fill="#10141c"/>
+<g font-family="Inter,DejaVu Sans,sans-serif">
+<rect x="64" y="56" width="44" height="44" rx="11" fill="#3270df"/>
+<g transform="translate(64 56) scale(.6875)"><path d="M19 27c-7-12 5-19 11-10h4c6-9 18-2 11 10 9 15-1 26-13 26S10 42 19 27Z" fill="white"/><path d="m23 36 6 6 13-15" stroke="#3270df" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="122" y="86" font-size="28" font-weight="600" fill="#f0f3f8">Squeek<tspan dx="7" font-weight="400" fill="#b9c5d9">Predict</tspan></text>
+<text x="64" y="250" font-size="62" font-weight="600" letter-spacing="-2" fill="#f0f3f8">Predict the</text>
+<text x="64" y="326" font-size="62" font-weight="600" letter-spacing="-2" fill="#f0f3f8">next block.</text>
+<text x="64" y="379" font-size="22" fill="#a6b1c3">The hamster runs. You call the outcome.</text>
+<circle cx="70" cy="530" r="5" fill="#62ddb0"/>
+<text x="87" y="537" font-size="18" fill="#a6b1c3">Practice &amp; Sepolia prediction markets</text>
+<rect x="746" y="146" width="390" height="366" rx="16" fill="#191f2b" stroke="#303a4a"/>
+<rect x="770" y="172" width="52" height="52" rx="11" fill="#463325"/>
+<g transform="translate(776 176)" stroke="#ffbf82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13C0 3 12 0 17 10m16 3C41 3 29 0 25 10M5 25c0-10 6-16 16-16s16 6 16 16c0 11-8 15-16 15S5 36 5 25Z" fill="#ffbf82" fill-opacity=".15"/><path d="M14 23h.1m14 0h.1" stroke-width="4"/><path d="m19 29 2 2 2-2m-2 2v4"/></g>
+<text x="837" y="187" font-size="14" fill="#a6b1c3">Daily blocks</text>
+<text x="837" y="213" font-size="18" font-weight="600" fill="#f0f3f8">Will the hamster complete</text>
+<text x="770" y="247" font-size="18" font-weight="600" fill="#f0f3f8">over 1,000 blocks in 24 hours?</text>
+<text x="770" y="307" font-size="36" font-weight="600" fill="#f0f3f8">50%</text><text x="862" y="306" font-size="14" fill="#a6b1c3">chance of Yes</text>
+<rect x="770" y="334" width="163" height="55" rx="8" fill="#173b32"/><text x="787" y="368" font-size="19" font-weight="600" fill="#62ddb0">Yes</text><text x="875" y="368" font-size="19" font-weight="600" fill="#62ddb0">50%</text>
+<rect x="945" y="334" width="167" height="55" rx="8" fill="#412731"/><text x="963" y="368" font-size="19" font-weight="600" fill="#ff96a4">No</text><text x="1052" y="368" font-size="19" font-weight="600" fill="#ff96a4">50%</text>
+<text x="770" y="425" font-size="14" fill="#a6b1c3">Two outcomes. Official block data.</text>
+<path d="M770 448h342" stroke="#303a4a"/>
+<text x="770" y="480" font-size="14" fill="#a6b1c3">Ready to predict</text><text x="1052" y="480" font-size="14" fill="#a6b1c3">Practice</text>
+</g></svg>

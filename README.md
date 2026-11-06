@@ -1,14 +1,12 @@
 # Squeek Predict
 
-A small, on-chain YES/NO prediction market for the **Squeekchain ecosystem / Buildooooor badge**. Bet Sepolia test ETH on whether the hamster will complete **more than X Squeek blocks during a fixed 24-hour or 7-day window**. This community MVP does not issue a badge or claim official endorsement.
+A dark, market-first prediction board for Squeekchain. Twelve ready-to-play questions have large **Yes / No** buttons, starting **50/50** odds, closing times and volume. Connect a wallet, choose a side and track it in **My Positions**. There is no market-creation flow.
 
-The market reads the official settled ledger directly from **SqueekCore V3**, through the Sepolia proxy **`0x74665dAecA35A2303e767E76a2FF1FB6F93e119f`**. Neither a market creator nor an app operator reports the result.
+The maintained site is **`web/`** (React, TypeScript, Vite, wagmi and viem). Its complete, committed static export is **`dist/index.html`** and `dist/` assets. `frontend/` remains the historical minimal client and is not published.
 
-## Website: install, preview and rebuild
+## Install, preview and rebuild
 
-The production site is **`dist/index.html`** with its local assets. The maintained frontend source is **`web/`** (React 19, TypeScript, Vite, wagmi/viem). The earlier `frontend/` is retained as the original minimal client; it is not the published export.
-
-Use Node **22.18+** (Node 24 recommended) and npm. From the repository root:
+Use Node **22.18+** and npm. From the repository root:
 
 ```sh
 cd web
@@ -19,72 +17,93 @@ npm run build
 npm run preview
 ```
 
-Open the local URL printed by Vite. `npm run dev` runs the source with hot reload. `npm run build` replaces the repository-root `dist/`; include that entire folder when submitting or hosting. Vite uses `base: './'`, every required runtime asset is local, and navigation uses hashes, so an ordinary static server or IPFS gateway subpath works without rewrite rules. No backend, API key, relay project ID or environment file is needed.
+Open the preview URL printed by Vite. `npm run dev` starts the source with hot reload. The existing `web/package.json`, `web/package-lock.json`, Vite configuration and contract build/dependency files are preserved. The lockfile pins the installed packages; no frontend dependency changes are needed.
 
-`web/.npmrc` enables legacy peer resolution for the current wallet ecosystem's optional peer conflicts; `web/package-lock.json` pins the installed versions. Dependencies and package caches are not part of the delivery. The `.gitignore` additions assign a **zero-byte submission budget at every nesting level** to `node_modules/`, `.vite/`, `playwright-report/`, and `test-results/`. `dist/` is deliberately included. Validation evidence in `artifacts/` has a separate 1.5 MiB (1,572,864 byte) budget and is explicitly included.
+`npm run build` replaces the root `dist/`. Include the entire export when submitting or hosting: the publisher does not rebuild it. Vite's `base: './'`, relative local assets and hash navigation support IPFS/gateway subpaths without server rewrites. Runtime fonts, icons, wallet marks and the social image are bundled locally. No backend, environment file, relay, project ID or private credentials are required. Wallet apps and public Sepolia reads require network access; the practice board itself remains usable during an RPC outage.
 
-For browser interaction checks, from `web/`:
+Generated dependencies, browser binaries, caches and disposable test files are not delivered. The existing ignore rules already exclude dependency directories at every nesting level; this task does not change an ignore file.
+
+## Ready markets and honest data
+
+A fresh read on **2026-11-06**, at Sepolia block **12075955**, verified the deployed bytecode and found **zero on-chain markets**. [The observation](artifacts/chain-observation.json) records actual public RPC results. Nothing was deployed and no real transaction was sent by this task.
+
+The homepage therefore opens with **12 practice template markets**, rather than asking visitors to create one. They cover completed-block totals and activity in one hour, six hours, 24 hours and seven days, including the explicit 00:00–06:00 UTC overnight window. All are binary questions verifiable from SqueekCore block history. These are editorial thresholds, not fabricated observations or invented contract market IDs.
+
+Practice cards are visibly marked **Practice**. Their stakes are **virtual ETH**; they never request a signature, debit a wallet or promise redeemable winnings. Pools, percentages, volume and positions come only from saved bets in this browser. They are not shared with other visitors. A connected wallet address separates its positions from other accounts on the same device. The app does not invent a wallet balance or pretend there is external liquidity.
+
+Real open markets from the existing contract automatically join the board and are marked **On-chain · Sepolia**. Featured ordering prioritizes them; templates fill the board to 12 cards. Category, search and market-type filters apply before the 12-card limit. Closing-time and volume sorts compare both types. A filtered view may have fewer than 12 results.
+
+### Betting and positions
+
+1. Select a market's **Yes** or **No** button. The slip preserves that choice, shows the amount and explains the market type before submission.
+2. Connect through the single header control or the slip: named EIP-6963 extensions, the four mobile wallet-browser links, or Coinbase Wallet / Smart Wallet. Connecting preserves the draft and never places a bet.
+3. Use a quick amount or enter a precise amount. Practice submission saves immediately; a real Sepolia bet requires a verified chain read, simulation, wallet approval and a successful receipt. Both enforce a 0.0001 ETH minimum and a 100 ETH aggregate side limit in their respective pools.
+4. Open **My Positions** to see separate practice and on-chain stakes. Practice results wait for certified endpoints and have no cash claim. On-chain winnings and refunds can be claimed to the connected wallet; the details dialog also supports a chosen receiving wallet. On-chain totals explicitly cover loaded markets; **Load older positions** expands that set.
+
+Empty markets show **50% / 50%**. After bets, the percentages are shares of their respective pool, not fixed share prices or guaranteed probabilities. Payout estimates include the proposed and previous same-side stake. Opposing stakes are required for winnings. There is no platform fee or early cash-out; on-chain bets are final and can lose their stake.
+
+### Windows, storage and resolution
+
+Template windows rotate at fixed UTC boundaries: the next hour, next six-hour boundary, next midnight for daily/overnight, or next Monday for weekly. Betting closes when measurement starts. Saved positions retain their original question and dates when the next window opens. The overnight question measures 00:00–06:00 UTC. Rules disclose exact local dates with timezone.
+
+Practice data uses `squeek-predict-practice-v1` in browser local storage. It survives reloads on the same origin/device; clearing browser data removes it. It is not an authenticated account service or a backup. If storage fails, the success dialog and page explicitly say the position lasts for this visit only. Other tabs receive storage updates.
+
+Results compare **whole-block heights at the two endpoints**, flooring each endpoint before subtracting, as the contract does. **Yes** requires strictly more than the threshold; exactly the threshold is **No**. Physical wheel revolutions and fractional work are not completed blocks. The app never guesses a missing result: future, failed, uncertified or incompatible endpoints remain pending. SqueekCore certification can lag by days. These templates do not support unrelated social/NFT outcomes.
+
+## Existing deployment
+
+- Network: **Sepolia**, chain ID **11155111**.
+- SqueekPredict: **`0x8bd658e58e94ab6a18a8b9d8c6108d1287facacf`**.
+- SqueekCore V3, read through the deployed contract's `CORE()`: **`0x74665dAecA35A2303e767E76a2FF1FB6F93e119f`**.
+- ABI/source provenance: **`841002e57646285ae0bd5a31e9af3c08f4f4839d`**, retained in `web/scripts/deployment-proof.json`.
+
+`npm run verify:deployment` in `web/` checks the pinned source digests, canonical ABI hash and creation bytecode. Public read code checks chain ID and runtime bytecode before trusting market state, and again before each transaction. The transaction path verifies the account/network before simulation and before requesting approval. Public network parameters, the existing wallet connectors, contracts and contract economics are unchanged.
+
+Snapshots refresh every 30 seconds at a single Ethereum block. Failed refreshes or reads older than 90 seconds pause on-chain submissions. The board retains public market data while changing accounts, clears account-specific positions, and waits for fresh account data before authorizing a transaction. Retry remains available. Practice is independent of RPC availability. Existing on-chain markets retain 24-hour/7-day resolution, unmatched refunds after betting closes, and expiry refunds after the 30-day grace period.
+
+## Validation and reproducible checks
+
+[DESIGN.md](DESIGN.md) documents implemented tokens, typography, components and responsive rules. [artifacts/validation.md](artifacts/validation.md) records all six Better Interface domains, findings, fixes, actual checks and unperformed checks. These are worker-side results, not independent certification.
+
+Checks run for this revision:
+
+- Production build and TypeScript typecheck: **passed**.
+- `npm test`: **28/28 passed**, including six new catalogue/persistence/pool tests and the retained contract-math tests.
+- DOM integration: **13/13 scenarios passed**, exercising the actual React app with mocked RPC and EIP-6963 providers. Coverage includes filters, draft preservation, virtual betting, exact real-bet calldata, rejection/retry, claims, account isolation, network switching, storage failure, persistence, certified results and RPC failure. No real signatures or broadcasts.
+- Declared opaque color-pair calculation: **15/15 passed** after correcting primary button contrast. This is a source calculation, not rendered contrast measurement.
+- ABI/deployment proof: **passed**; fresh real public reads matched the expected runtime and returned zero markets.
+- The pinned design probe and the real-browser suite were **attempted but could not render**. Supplied Chromium failed at launch; local Chromium also exited with SIGTRAP. Firefox could not locate its application directory. WebKit initially lacked libraries; after supplying temporary test libraries it launched but closed before creating a page. Consequently no new page screenshots, native focus/overflow measurements or browser axe scans are claimed.
+
+To repeat the browser checks on a machine with a usable browser runtime, from `web/`:
 
 ```sh
-npx playwright install chromium
+node node_modules/playwright/cli.js install chromium webkit
 npm run test:browser
+ENGINE=webkit npm run test:browser
 ```
 
-The browser test serves the finished export at `/preview/` inside its own bounded process, mocks RPC and wallet interactions, checks calldata and resulting UI state, and writes disposable results to `test/scratch/` (or `SHOTS_DIR`). It sends no transactions and uses no signing key. Browsers are installed in Playwright's normal external cache, never vendored into the site.
+The suite serves the finished `dist/` at `/preview/` inside one bounded process and closes its server/browser afterwards. It checks 320/390/800/980/1440px layouts, first-phone-screen actions, filters, practice persistence, real transaction fixtures, mobile wallet rows, native keyboard focus, reduced motion and axe. It writes disposable screenshots/results under `test/scratch/`; none are production fixtures.
 
-## Live deployment and first interaction
-
-The site uses the existing **Sepolia** deployment, chain ID **11155111**, at **`0x8bd658e58e94ab6a18a8b9d8c6108d1287facacf`**. This frontend task did not deploy or change any contract. Public network settings live in `web/src/network.ts`.
-
-`web/src/predictAbi.ts` and `coreAbi.ts` were derived from Solidity 0.8.26 at source commit `841002e57646285ae0bd5a31e9af3c08f4f4839d`. `npm run verify:deployment` in `web/` checks the pinned source digests, frontend ABI, canonical ABI hash and creation bytecode, and regenerates the expected runtime hash. The live browser read matched that runtime hash; see [the public chain observation](artifacts/chain-observation.json). The site verifies chain ID and deployed bytecode before displaying usable state and again before each transaction, then simulates the action and verifies the wallet account/network before asking for approval.
-
-### Using the site
-
-The site is a dark prediction-market board with local Inter typography, subtle hamster branding and large green **Yes** / rose **No** controls. Only the deployed contract’s binary completed-block markets are visible. The old browser-only founder, NFT and multi-choice catalogs are retained as historical source, but are not rendered or included in the active experience.
-
-1. **Find an open market.** The homepage starts on Open. Cards show the complete question, current pool percentages, closing time and test-ETH volume. Status tabs, search, duration and sorting narrow the board. Load older markets or use the number lookup for earlier entries.
-2. **Choose Yes or No.** Yes requires strictly more completed blocks than the target. Exactly the target settles as No. An empty pool starts at **50% / 50%**; after bets arrive, percentages are each side’s share of staked ETH. These are pool-based odds, not guaranteed probabilities or fixed-price shares.
-3. **Review your stake.** The bet slip keeps the chosen side, offers quick amounts, and estimates the payout including your new and existing same-side stake. Minimum stake is `0.0001` Sepolia test ETH, with a `100` ETH cap per side; gas applies. Bets are final and can lose their stake. Rules, exact pools, dates and return multipliers are under Market rules & details.
-4. **Connect and confirm.** The header offers named EIP-6963 extensions, mobile wallet-browser links and Coinbase Smart Wallet. Connecting preserves the slip’s side and amount and never sends a transaction. The header switches/adds Sepolia when needed; close a slip before switching. Every action is simulated and approved in the visitor’s wallet. Receipt links and retryable errors explain its result.
-5. **Track My positions.** The dedicated view shows active stakes, position cards and available winnings/refunds, with direct Claim actions. Claims pay the connected wallet; a market’s detail view also supports a chosen receiving address. Totals explicitly cover loaded markets, including any number lookup. Load earlier markets to find earlier positions.
-6. **Create the next market.** Set a whole-block target and choose a 24-hour or 7-day window. Starts snap to 10-minute Squeek rounds, at least 65 minutes and at most 7 days ahead in the UI. Daily/weekly templates leave the target for you to enter; the activity template asks whether any block completes. Creating costs gas and does not stake ETH. Drafts survive connection and confirmation offers Done. Anyone can resolve a certified result or open eligible refunds.
-
-Market and wallet snapshots refresh every 30 seconds at one Ethereum block. Failed refreshes label cached data and disable submissions; data older than 90 seconds also cannot authorize a submission. A failed initial read exposes Retry. The Core block-height summary is read from the same snapshot. Physical wheel turns and fractional block work are not counted as completed blocks. There is no early cash-out or secondary trading.
-
-A read-only public Sepolia observation on **2026-11-05**, at block **12072244**, returned **zero markets**, a matching deployed runtime hash and an unpaused Core. See [artifacts/chain-observation.json](artifacts/chain-observation.json). The production site therefore offers **The next market starts with you** and Create market; it never fabricates active bets. Populated screenshots are clearly identified interaction fixtures. Nothing was deployed or submitted on-chain.
-
-### Read-only and asset checks
-
-From `web/`, these optional scripts use the existing development dependencies:
+The supplemental DOM emulator requires an optional test dependency, installed only into scratch. From the repository root:
 
 ```sh
-npm run verify:deployment
-node scripts/observe-chain.mjs
-node scripts/check-live.mjs
-node scripts/render-share.mjs
+npm install --prefix test/scratch/dom --cache test/scratch/npm-cache --ignore-scripts --no-audit --no-fund happy-dom@21.0.4
+node web/tests/dom-check.mjs
+node web/scripts/check-colors.mjs
+node web/scripts/audit-export.mjs
 ```
 
-`observe-chain.mjs` requires curl and records real public RPC results in `artifacts/chain-observation.json`. `check-live.mjs` serves `dist/` at `/preview/` for its own lifetime and forwards browser RPC requests through curl when direct browser networking is restricted; it never substitutes fixture responses. It writes disposable screenshots/results to `test/scratch/live/`. `render-share.mjs` regenerates the 1200×630 social image from the local font and favicon; rebuild afterwards to copy it into `dist/`.
+This does not change the production manifest or lockfile. Happy DOM has no layout engine; native `dialog` methods are emulated in this test. It cannot establish rendered appearance, focus confinement, actual overflow, loaded fonts, native zoom, screen-reader output or physical-device behavior. Real passkeys/deep-link handoff and real signed transactions are also unverified.
 
-## Frontend validation
-
-See [artifacts/validation.md](artifacts/validation.md) for the six-domain Better Interface review, source locations, fixes, commands and limitations. [DESIGN.md](DESIGN.md) documents the final tokens, typography, components and responsive behavior. These are worker-side results, not an independent certification.
-
-- Final `npm run typecheck` and `npm run build` passed with the existing manifest, lockfile and Vite configuration unchanged. The complete export is `dist/`, with relative local assets and hash navigation.
-- `npm test`: **22/22 passed**. These include exact wei amounts, timing, payouts, binary labels and initial/changing pool percentages; retained historical-module tests also run.
-- `npm run test:browser`: **19/19 Chromium scenarios passed**. Coverage includes responsive cards, filters/search/sort, validation, wallet draft preservation, rejection/retry, exact betting and creation calldata, claims, resolution/refunds, account changes, network switching, pagination/lookup, keyboard/focus, zero markets, RPC failure and bytecode mismatch. All wallet/RPC transactions in this suite are mocked. Board and bet-slip axe scans returned no violations in the selected WCAG 2.2 AA rule set.
-- The pinned `taste.mjs` probe passed **16/16** checks at 320, 390 and 1440px, including reduced motion. Its direct browser reads reached the recoverable RPC-error state in this sandbox; separate populated and real-read browser checks cover the other states. Output is retained in [artifacts/taste.json](artifacts/taste.json).
-- Real public Sepolia reads rendered successfully at **320, 390, 800 and 1440px** through the read-only curl transport bridge. The local Inter font loaded, the board correctly showed zero markets, market creation produced real round-aligned dates, and there were no page errors, missing local resources or horizontal overflow. Mocked cards also passed at 980px.
-- `npm run verify:deployment` passed: source digests, canonical ABI hash and creation bytecode match the retained deployment proof. A fresh public chain read independently matched the runtime hash. Contracts, contract build configuration, dependencies and wallet connector configuration were not changed.
-- Limitations: the supplied browser tool failed to launch; local Playwright Chromium supplied the rendered evidence. WebKit could not launch because required system libraries are unavailable. Physical phones, real signatures, third-party passkeys/deep-link handoff, screen-reader sessions, native browser zoom, RTL/localization and a manual animation-panel review remain unverified. Direct browser-to-RPC access in this sandbox failed; curl reached the configured public RPCs. Vite retains a large-chunk advisory: main JS is **653.41 kB** (**198.33 kB gzip**).
-
-For the pinned probe, while the assignment inputs are present, run from the repository root:
+While the pinned assignment inputs exist, the exact probe command is:
 
 ```sh
-IMD_PLAYWRIGHT=./web/node_modules/playwright/index.mjs node .imd/reads/skills/design-critic/scripts/taste.mjs --out test/scratch/taste
+IMD_PLAYWRIGHT="$PWD/web/node_modules/playwright/index.mjs" node .imd/reads/skills/design-critic/scripts/taste.mjs --out test/scratch/taste
 ```
 
-The guide and probe are assignment inputs and are not required to build or run the delivered site. For this run, browser executables and npm caches were confined to disposable `test/scratch/`. A normal workstation can use Playwright’s default external cache. No dependency directories, browser binaries, registry archives or caches are delivered. The final static-asset and submission-size audit is in [artifacts/export-audit.json](artifacts/export-audit.json).
+The production build retains Vite's wallet-bundle size advisory and a warning about the intentional `../fonts/InterVariable.woff2` public URL. The asset audit confirms that this relative font URL resolves in the export. Font, source, SVG/PNG social card, wallet marks and licenses remain complete. The final conservative submission-byte count and protected-path check are in [artifacts/export-audit.json](artifacts/export-audit.json).
+
+`node web/scripts/render-share.mjs` can regenerate `web/public/share.png` from the local SVG/font on a browser-capable machine; rebuild afterwards. In this run, the social PNG was rasterized from `share.svg` with a disposable SVG renderer and DejaVu Sans fallback because Chromium could not start. This is share artwork, not a screenshot of the website.
 
 ## Contract development
 

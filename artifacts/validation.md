@@ -1,108 +1,83 @@
-# Squeek Predict frontend validation
+# Frontend validation — Squeek Predict redesign
 
-Date: 2026-11-05. Result: **Complete for the stated frontend scope**, with the limitations below. These are the worker's checks and observations, not an independent certification.
+## Scope and assumptions
 
-| Area | Final result |
-| --- | --- |
-| Brief requirements and acceptance criteria | 16 addressed; 0 missing, 0 fabricated |
-| Known broken primary interactions | 0 in the exercised Chromium scenarios |
-| Product/action on first 390px screen | Yes: populated card side buttons; real empty board Create market |
-| Production build / TypeScript | Passed / passed |
-| Unit / browser scenarios | 22/22 / 19/19 passed |
-| taste@1 | 16/16 passed |
-| Social metadata | Title, favicon, description, og:title, local 1200×630 og:image |
+This revision changes the website, its assets, frontend validation and documentation. The active product is `web/src/App.tsx`; the delivered static export is `dist/`. Contracts, their configuration/dependencies, existing frontend package manifest/lockfile and Vite configuration remain unchanged. No publishing, deployment, minting, keys or real wallet transactions were used.
 
-## Scope and consequential assumptions
+The design is a compact Polymarket-style market board: navy canvas, flat cards, large binary choices, restrained blue primary action, professional local type and small hamster illustrations. Ordinary layout/copy decisions were inferred without an interview.
 
-Only the maintained frontend and its documentation/evidence were redesigned. `web/` retains React, TypeScript, Vite, wagmi and viem; `dist/` is the final static export. Contracts, deployment, economics, chain settings, ABI files, wallet connector configuration, package manifest/lockfile and existing build configuration were preserved.
-
-The one visual idea is a restrained dark prediction-market board: complete questions above large, color-coded Yes/No pool actions. There is no landing-page hero before the product. The existing footer credits remain. The latest request for serious two-choice markets supersedes the earlier display of browser-only founder/NFT and multi-choice calls. Those historical modules remain source-only; the rendered board uses the deployed contract's binary completed-block markets.
-
-**There are currently no markets to bet on in the live deployment.** The actual public chain observation at Sepolia block 12072244 returned marketCount 0, a matching runtime hash and an unpaused Core. The site exposes creation and clearly labeled templates; it never seeds a market, odds, volume or wallet balance. The screenshots named `fixture-*`, `positions-*`, `mobile-bet-slip`, `keyboard-focus-*` and `wallet-*` use test-only RPC/wallet fixtures. Screenshots named `live-*` use real read-only public RPC responses. No real signature, bet, creation, claim or other transaction was sent.
+The verified live deployment had **zero markets** at block **12075955**, observed on 2026-11-06. The brief explicitly permits template markets. Twelve ready practice markets therefore supply the immediate experience; they are visibly local/virtual and never masquerade as funded on-chain contracts. Verified real open markets automatically join the board. Practice outcomes use the same certified whole-block difference rule, but have no redeemable winnings. Unknown endpoints never become guessed results. The full real observation is `artifacts/chain-observation.json`.
 
 ## Requirement coverage
 
-| Brief requirement | Evidence |
+| Requirement | Result / evidence |
 | --- | --- |
-| Clean dark theme | Dark semantic tokens, flat surfaces and violet brand; `styles.css`, inspected mobile/desktop screenshots |
-| Active markets as clear cards | Open is the default filter; chain-driven `MarketCard` grid; two open fixture markets, honest zero-market live state |
-| Question, odds, two big choices | Full question, pool percentages, Yes/No actions ≥58px; initial 50/50 and post-bet updates tested |
-| Simple betting after connecting | One slip, native radios, quick amounts, payout, draft-preserving connection, simulated wallet action and receipt |
-| Clear My Positions | Dedicated hash view, active stake/claim totals, position cards, direct claims; loaded-market coverage disclosed |
-| Professional typography/layout | Local Inter, six-size scale, three weights, consistent gutters/grids; measured contrast and visual inspection |
-| Mobile-friendly | Board at 320/390/800/980/1440; mobile wallet and full-width bottom sheets; no page overflow |
-| Only serious two-choice markets | Rendered market grid uses verified SqueekPredict data; free-call/multi-choice catalogs are not mounted |
-| Smooth, understandable experience | Filter recovery, honest empty/loading/error states, unchanged drafts, decline/retry, success/Done, focus return |
-| Usable primary interactions | 19 browser scenarios cover the flows below |
-| Static export with source/lockfile | `dist/index.html`, complete local assets, maintained `web/` source and existing lockfile; relative URLs audited |
-| Build/typecheck/useful validation | Commands and actual outcomes below |
-| Better Interface applied/reviewed | All six pinned domains read during implementation; coverage and corrected findings below |
-| First screen and metadata | Assertions and screenshots at 390×844; all metadata present; local share PNG inspected |
-| DESIGN.md | Root document extracted from final CSS/components and rendered observations |
-| README | Install, development, preview, rebuild, validation, chain/asset scripts and limitations documented |
+| No market-creation request | Met. No active creation imports, entry points or prompts. DOM suite asserts their absence. Historical source remains unused. |
+| Homepage with 10–15 ready cards | Met. Twelve open binary cards immediately, even with zero chain markets or unavailable RPC. Filters may intentionally narrow the result. Real cards replace templates in Featured. |
+| Questions, 50/50 start, large sides, time and volume | Met in source and DOM checks. Empty pools are 50/50; only actual local practice or actual chain stakes affect percentages/volume. |
+| Connect wallet and choose a side | Met in DOM interaction tests, including preserved draft and correct real-bet calldata. Actual wallet app/passkey/signature handoff unverified. |
+| Verifiable Squeekchain/Sepolia activity | Met. Only block-completion questions; UTC windows; certified endpoint differences with strict greater-than resolution. Certified and uncertified test paths covered. |
+| My Positions | Met. Address-scoped local positions, frozen windows/results, separate live stakes, claims and older-position coverage. |
+| Dark modern design | Implemented and reviewed in source: five-size Inter scale, navy surfaces, restrained blue, green/rose side actions and original small illustrations. Rendered appearance not observed. |
+| Responsive / first screen at 390 | Implemented source rules for 320–1440+; no hero before cards. **Not rendered-verified.** Native browser runtimes could not create a page. |
+| Static export and metadata | Met. Root `dist/index.html`, relative local references, hashes, title/favicon/description/og:title/og:image; asset audit passes. Existing source manifest and lockfile remain included unchanged. |
+| Production build, typecheck, useful interactions | Met. Build/typecheck, 28 unit tests, 13 DOM integration scenarios, declared-color check and asset/path checks ran. Actual results below. |
+| Better Interface review and DESIGN/README | Met for source and available DOM checks across all six domains; browser-specific checks explicitly unperformed. Current documents describe final source. |
 
-## Better Interface: six-domain review
+## Six-domain Better Interface review
 
-The pinned contents/workflow and core principles of accessibility, layout, writing, typography, colors and UI were read before implementation. Relevant supporting material covered forms, focus, targets, wrapping, surfaces and motion. The documentation section was read before updating DESIGN.md. Attribution and licenses remain in `docs/DESIGN_GUIDANCE_LICENSE.txt` and `THIRD_PARTY.md`.
+The pinned workflow, all six core domains and the documentation method were read and applied while building. Scope is the active board, wallet path, practice slip/success/error, live bet/claim path, positions, loading/outage and filtering. A checked source domain does not mean its rendered subchecks ran.
 
-| Domain | Coverage and evidence | Limits / not applicable |
+| Domain | Checked | Not verified / not applicable |
 | --- | --- | --- |
-| Accessibility — Checked | Native links/buttons/radios/dialogs; labels and field associations; keyboard Enter/Tab/Escape, inert background, restored trigger focus, visible white radio-label ring; board/slip axe WCAG scan: zero selected-rule violations | No screen-reader session, native zoom, physical device or full compliance claim. Forced-colors rules source-reviewed, not visually exercised |
-| Layout — Checked | Source grids, grouping and DOM order; production subpath; screenshots at 320/390/800/980/1440; no horizontal overflow; populated action and empty-board creation visible at 390; phone dialog width asserted at exactly 390 | No native 200% browser zoom, RTL mirror or localization. Not every possible intermediate width was sampled |
-| Writing — Checked | Consistent question/Yes/No vocabulary; strict-threshold rule; pool share versus probability; estimates include stakes; Sepolia/test ETH and loaded-market coverage; actionable empty/error/decline/retry/success text | No translations; external faucet/service availability is outside the frontend |
-| Typography — Checked | Locally loaded Inter confirmed in real-read browser checks; six sizes and weights 400/500/600; body/questions line-height; tabular figures; full uint64 threshold fits 320px card/slip | Platform fallback rendering and manual text-enlargement session not verified |
-| Colors — Checked | Actual solid computed foreground/background pairs measured; minimum sampled normal text pair 6.88:1; axe and taste contrast pass; selection has native radio plus border; written status and check/cross icons accompany color | No light theme is requested or implemented. Every alpha/hover/disabled/forced-color pair was not independently measured |
-| UI — Checked | Shared flat surfaces, consistent icon set and radii; normal/hover/selected/focus/disabled/busy/empty/error/success code review; rendered board, selection, connection, success, error, recovery and focus states; named 150ms transitions; reduced-motion probe passes | No manual animation-panel playback at 10% speed. Mock confirmations are fast, so all transient wallet/pending stages were not manually observed. Third-party wallet UI not inspected |
+| Accessibility | Native buttons/links/forms; named search/select/amount controls; heading/landmark order; skip link; native radio names; field-linked validation; persistent status/error messages; visible focus CSS; reduced-motion guard; mobile target dimensions declared. DOM tests exercise forms, errors and recovery. | Native dialog focus trap/inertness, visible keyboard rings, axe, screen-reader sessions, physical touch and forced-colors rendering. DOM tests emulate dialog methods and cannot certify those properties. |
+| Layout | Source order prioritizes cards; 4/3/2/1 column grid; minmax columns; wrapping categories and questions; full-width phone search; bottom sheets/safe-area padding; no fixed bottom navigation; filters before content; account switch preserves public board. | Actual 320/390/800/980/1440 reflow, text overlap, first-screen visibility, native 200% zoom, RTL/pseudo-localization. |
+| Writing | Side/amount/submit terms match actions; creation language removed; practice provenance and no-funds disclosure before submission; no fabricated liquidity; honest errors and storage fallback; exact threshold/date rules; actionable empty states. | Localization was not requested. Native screen-reader announcements remain unverified. |
+| Typography | One local Inter family, 400/500/600, five sizes (12/14/16/20/28), tabular numbers, 16px+ phone inputs, 1.5/1.6 line height, wrapping questions/addresses and no critical truncation. | Actual font loading, line wrapping/widows, text enlargement and fallback rendering in browser. |
+| Colors | Semantic hex tokens and exact declared opaque pair calculations; primary fill corrected from failing 4.11:1 to 4.65:1; 15/15 selected text/focus/control pairs pass their thresholds. Outcome colors have words/icons. | Rendered contrast over opacity/backdrops, all transient states, forced-colors and physical display behavior. No rendered contrast claim is made. |
+| UI | Flat structural borders; consistent art/icon/action patterns; hover/pressed/selected/disabled/pending/error/success source states; native dialogs; 150ms named-property transitions only under no-preference; no endless animation or loading skeleton that hides ready templates. | Real browser hover/focus/animation behavior, 10%-speed Animations-panel review and Safari rendering. No light theme, media playback, secondary trading or localization is part of this scope. |
 
-## Findings corrected
+## Findings, fixes and rechecks
 
-Locations refer to the final source and its fix, not the generated bundle.
+These are source or DOM findings, not invented screenshot observations. Locations refer to the final source.
 
-| Severity / domain | Finding, correction and recheck |
-| --- | --- |
-| High / layout, UI | The former light board/catalog conflicted with the requested dark professional binary marketplace. `web/src/styles.css:9` defines the dark system; `web/src/App.tsx:180` renders verified binary market cards and `App.tsx:194` contains clearly labeled creation templates. Historical free-call catalog imports were removed. Populated/live screenshots and binary card assertions confirm the final scope |
-| High / layout | After the font loaded, the initial 320px zero-market screen placed Create market at y=866.09, below the tested 844px screen. `web/src/App.tsx:168` now omits irrelevant filters when the chain is empty. Zero-market tests at 320/390/1440 pass with creation on the first screen; `screenshots/live-390.png` was inspected |
-| Medium / UI, layout | Chromium's default dialog max-width left a narrow phone sheet with a large asymmetric gutter despite width:100%. `web/src/styles.css:224` overrides `max-width: none`; the mobile sheet rule at line 429 spans the viewport. The browser suite now asserts a 390px-wide sheet and `screenshots/mobile-bet-slip.png` confirms the correction |
-| Medium / writing | Over/Under fractional-line labels required translating the question before choosing. `web/src/model.ts:87` uses a complete question and `model.ts:92` uses consistent Yes/No sides; `web/src/MarketDialog.tsx:77` states strictly-more-than and exactly-target rules. Unit questions/labels and browser calldata tests pass |
-| Medium / writing | Cancelled markets previously said Refunded before a user had claimed. `web/src/model.ts:19` now returns Cancelled; claims/refund eligibility are separate. Lifecycle unit tests and the open-refunds/claim scenarios pass |
-| Medium / writing | The payout helper includes existing same-side stake but the estimate note did not explicitly say so. `web/src/MarketDialog.tsx:58` adds that explanation only when it applies. Exact payout unit tests and the connected betting flow pass |
-| Low / UI | A successful creation left another Create market action. `web/src/CreateDialog.tsx:87` now offers Done after success. The creation scenario confirms exact threshold/window calldata and success. Pending market-card controls also use `busy` so another slip cannot replace a transaction's context |
+1. **High — empty board made creation the primary task.** `web/src/App.tsx:330`, `web/src/catalog.ts:24`. Before: zero deployed markets produced an empty board and creation prompts. Change: twelve ready binary templates, real markets joining automatically, no creation entry points. Why: explicit brief. Recheck: zero-market and RPC-outage DOM scenarios each retain 12 cards with both side controls.
+2. **High — practice could be mistaken for chain liquidity without provenance.** `web/src/App.tsx:641`, `web/src/PracticeDialog.tsx:226`. Change: Practice labels, virtual-ETH disclosure before submit, browser-local volume/positions, separate on-chain cards and summaries; no invented contract IDs or balances. Why: template allowance does not authorize fake transactions. Recheck: practice bet changes local volume/odds/positions and emits **zero** wallet transactions; real fixture bet uses the supplied deployment.
+3. **Medium — account connection briefly replaced live cards while fetching its positions.** `web/src/App.tsx:88`, `web/src/App.tsx:103`. Observed in the DOM interaction test: an existing card became detached during account query transition. Change: retain previous public snapshot but clear positions and disallow authorization until fresh account data. Recheck: connect/bet/rejection and account isolation scenarios pass.
+4. **Medium — primary blue had inadequate declared white-label contrast.** `web/src/styles.css:18`. Before `#3979eb` / white calculated **4.11:1**. Change to `#3270df`, calculated **4.65:1**, preserving the blue direction. Recheck: `node web/scripts/check-colors.mjs` passes 15 selected pairs. This is declared, not rendered, measurement.
+5. **Medium — failed persistence still produced a durable-save success claim.** `web/src/App.tsx:173`, `web/src/PracticeDialog.tsx:110`. Change: return persistence status and say “saved for this visit only” inside the success dialog as well as the page notice. Recheck: forced storage failure still preserves the in-memory position, clearly discloses the limit, and does not claim durable storage.
+6. **Medium — sorting and filtering applied after capping separate source groups.** `web/src/App.tsx:330`. Change: filter the combined source set before capping and compare both types for closing/volume sorts. Featured retains chain priority. Recheck: category/search/type/empty recovery and funded-practice volume sorting pass.
+7. **Medium — incompatible/missing history must not resolve a template.** `web/src/data.ts:107`, `web/src/data.ts:145`. Change: check Core's expected grid/units, require both exact certified endpoints, floor each endpoint, reject decreasing heights and leave missing data unknown. Recheck: expired saved fixture resolves No with 432 completed blocks; the same uncertified endpoints remain “Awaiting certified result”. Saved window boundaries do not roll forward.
+8. **Low — compact close and input boundaries needed clearer source-defined affordances.** `web/src/styles.css:361`, `web/src/styles.css:953`. Change: 44px modal close targets and `--control-line` boundaries on search/select fields. Declared boundary contrast is 3.35:1 on cards. Source rechecked; actual touch/focus rendering remains unperformed.
 
-The initial test run also exposed stale Over/Under test expectations and assertions racing the post-receipt refetch. The expectations were updated for the actual binary labels, assertions now await the resulting pool/claim DOM state, and each scenario closes its contexts. One probe invocation began before an asynchronous build completed and reported no index; it was rerun only after the production build finished. Final results below come from the completed export. One intermediate build/test session was terminated (143); the completed reruns are recorded below.
+No unresolved known application error remained in the checks that could run. The unresolved rendered-coverage limitation is material and listed below rather than called a pass.
 
-## Executed verification
-
-Commands are from the repository root unless noted. Browser executables were installed under disposable `test/scratch/browsers`; set `PLAYWRIGHT_BROWSERS_PATH` to that folder when reproducing this particular run. No package or lockfile was changed.
+## Commands and actual outcomes
 
 | Command | Actual outcome |
 | --- | --- |
-| `npm ci --prefix web --cache test/scratch/npm-cache --ignore-scripts --no-audit --no-fund` | Installed the existing locked frontend dependencies; exit 0 |
-| `npm run typecheck --prefix web` | Final source passed; exit 0 |
-| `npm run build --prefix web` | Final source exported to `dist/`; exit 0. Main JS 653.41kB / 198.33kB gzip; Vite's >500kB advisory remains |
-| `npm test --prefix web` | 22/22 passed; exact stakes, timing, payouts, labels, pool percentages and retained historical modules |
-| `npm run verify:deployment --prefix web` | Source digests, frontend ABI, canonical ABI hash and creation bytecode matched retained pinned proof; exit 0 |
-| `node web/scripts/observe-chain.mjs` | Real public Sepolia read; chain 11155111, marketCount 0, matching runtime hash; exit 0. `chain-observation.json` |
-| `npm run test:browser --prefix web` | 19/19 Chromium scenarios passed; exit 0. `interaction-results.json` |
-| `node web/scripts/check-live.mjs` | Real public RPC responses through curl, 28 read calls across four viewport contexts; all passed; exit 0. `live-read-results.json` |
-| `node web/scripts/render-share.mjs` | Rendered local 1200×630 share PNG; exit 0, followed by production rebuild and visual inspection |
-| `IMD_PLAYWRIGHT=./web/node_modules/playwright/index.mjs node .imd/reads/skills/design-critic/scripts/taste.mjs --out test/scratch/taste` | Final probe: 16/16 checks; exit 0. `taste.json`. Direct browser RPC was unavailable, so it measured the error/retry state; populated and real-read tests supplement it |
-| `ENGINE=webkit npm run test:browser --prefix web` | Attempted; browser launch failed because system libraries were unavailable. No WebKit pass is claimed |
-| Supplied browser tool navigation | Attempted; browser launch failed with a socket-path limitation. Local Playwright Chromium supplied the rendered checks instead |
-| `node web/scripts/audit-export.mjs` | Relative local assets resolve; five required metadata fields present; no protected-path changes or generated dependency/cache additions; conservative changed-file bytes below 8MiB. `export-audit.json` |
+| `npm ci --ignore-scripts --cache ../test/scratch/npm-cache --no-audit --no-fund` in `web/` | Passed; 97 locked packages installed. Existing manifest/lockfile unchanged. |
+| `npm --prefix web run verify:deployment` | Passed. Canonical ABI `0x3d6fa830e7687fd236ee229edff0d15994319e898520fc82bc4e75ae1c3987ec`; runtime `0xa428c2a0ae99d4bd68a02aa893d5cc70698af0c82d478efa475e35adeee6555b`; pinned source digests match. |
+| `node scripts/observe-chain.mjs` in `web/` | Passed. Actual public Sepolia chain 11155111; runtime matches; block 12075955; zero markets; Core read succeeds. No broadcast. |
+| `npm --prefix web run typecheck` | Passed, exit 0. |
+| `npm --prefix web test` | Passed, 28 tests, zero failures. Includes six new catalogue/UTC/storage/pool/boundary tests and retained existing tests. |
+| `npm --prefix web run build` | Passed, exit 0. Export is 17 files / 1,220,529 bytes. Main JS 657.25 kB (199.62 kB gzip). Vite retains its chunk advisory and deliberate public-font URL warning. |
+| `node web/tests/dom-check.mjs` | Passed, **13/13** scenarios against the actual production JS chunks rebundled into an emulator IIFE. Optional happy-dom 21.0.4 installed only in scratch. This is neither a real browser nor a CSS/layout test. |
+| `node web/scripts/check-colors.mjs` | Passed, 15/15 declared solid foreground/background/control pairs; report `artifacts/contrast.json`. |
+| `PLAYWRIGHT_BROWSERS_PATH=… node web/tests/browser-check.mjs` | Attempted, exit 1 before rendering: Chromium runtime failed to launch. No browser scenario or screenshot passed. Paths normalized in retained report. |
+| Pinned `taste.mjs --out test/scratch/taste`, with local Playwright module/browser path | Attempted against final export, exit 2. Chromium terminated before rendering. **Zero design checks were measured**; no 320/390/1440 screenshots or pass count is claimed. |
+| `node web/scripts/audit-export.mjs` | Passed. No missing local assets, absolute asset URLs, protected changes, submittable dependency/cache directories or over-budget additions. `artifacts/export-audit.json` records the final conservative count. |
 
-No Solidity tests were rerun because contracts were unchanged. The source hashes were checked by deployment verification. Browser tests use a bounded foreground static server at `/preview/`, exercise real compiled JS/CSS, decode mocked transaction calldata and send nothing to a chain. There are no dummy production records or signing credentials.
+The DOM test runs the production JavaScript after rebundling its chunks into one script for the emulator; `import.meta` chunk context is not a native module-loader test. Wallet/RPC providers are mocks. Happy DOM's native dialog methods are explicitly emulated. The suite is useful evidence for primary state transitions and calldata, not evidence of layout, appearance or full accessibility.
 
-The 19 scenarios cover: binary cards/local assets; 320/390/800/980/1440 responsiveness; status/duration/search/sort/reset; stake validation/quick amounts/payout rules; connect/draft preservation/decline/retry/calldata; 50/50 and pool updates; creation/draft/window calldata; position claims; resolution/refunds; positions/help/navigation; wrong network/account changes; mobile wallet links; keyboard/focus/inertness; honest zero markets; RPC retry/runtime mismatch; long uint64 questions; pagination/lookup; axe/contrast; no uncaught page errors or missing local resources.
+### Browser limitation
 
-## Evidence and remaining limitations
+The supplied browser tool failed at initialization with a Chromium crashpad launch error. A locally installed Playwright Chromium also exited at launch with SIGTRAP. Firefox reported that it could not find its application directory. WebKit first reported missing shared libraries; temporary Ubuntu runtime libraries allowed launch, but the process closed before a page could be created. No machine/account details, caches, libraries, browser binaries or package archives are included in the submission.
 
-Current screenshots only, all from the final export:
+Consequently the first screen at 390, responsive geometry at 320/390/800/980/1440, native focus/inertness/keyboard walks, visible rings, rendered contrast, font loading, console/resource behavior in a native browser, axe scans, Safari behavior, physical phones, browser-native zoom and screen readers remain **unperformed**. These are not reported as failures in the app or as passed checks. Real passkeys, wallet-app deep links and signed chain transactions are also unverified.
 
-- `screenshots/fixture-320.png`, `fixture-390.png`, `fixture-1440.png`: **mocked** populated market board.
-- `screenshots/mobile-bet-slip.png`, `keyboard-focus-390.png`, `wallet-390.png`, `positions-1440.png`: **mocked** interaction states. The visible test wallet is a test-only EIP-6963 provider.
-- `screenshots/live-390.png`, `live-1440.png`, `live-creation-390.png`: **real read-only** chain state and creation dates. Entering a draft target does not create a market.
-- `contrast.json`: six measured rendered pairs. `taste.json`: unmodified final probe output. The probe's disposable screenshots were inspected; no claim is made that its outage view was a populated/live-read pass.
+The only new raster artwork inspected is the 1200×630 social image generated from `web/public/share.svg`; it is **not a page screenshot**. It uses a DejaVu Sans rendering fallback because Chromium was unavailable. The PNG, editable SVG and normal Playwright regeneration script are delivered. Prior revision page screenshots are removed from the current evidence set because they do not represent this redesign.
 
-WebKit, physical-device behavior, actual wallet signatures, Coinbase passkey creation, vendor app handoff, screen-reader output, native browser zoom, RTL/localization and manual animation-panel playback remain unverified. Direct browser access to the public RPCs was restricted here; curl could reach them. Runtime RPC availability and the creation of actual markets depend on the public chain and its participants. The export has no backend, private key, indexer, automated market seeding or settlement service.
+## Completion
 
-The previous frontend's screenshots/reproduction report were replaced with this redesign's inspected evidence. The existing artifacts budget remains below 1.5MiB without changing any ignore file. Required source, lockfile, runtime assets and licenses remain complete; dependencies/caches/browser binaries stay outside the submission.
+The website implementation, static export, source/lockfile preservation, documentation and all available non-rendered checks are complete. Native rendered verification remains incomplete due to the runtime failures above. `artifacts/interaction-results.json`, `contrast.json`, `chain-observation.json`, `taste.json`, `browser-runtime.json` and `export-audit.json` describe this revision; they are worker observations, not independent certification.

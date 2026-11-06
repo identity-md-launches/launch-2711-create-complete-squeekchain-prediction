@@ -2,106 +2,111 @@
 
 ## Overview
 
-Squeek Predict is a two-outcome prediction market for Squeekchain activity, using Sepolia test ETH. The maintained interface is React/TypeScript in `web/src/`; its complete static export is `dist/`. The design uses a dark canvas, restrained violet branding, flat market cards and prominent green Yes / rose No choices. The question, closing time, pool split and side actions are the primary hierarchy.
+Squeek Predict is a compact prediction-market board for Squeekchain activity. It uses a dark navy canvas, flat bordered cards, a restrained blue primary action and green Yes / rose No choices. Small original hamster/block illustrations identify questions without becoming a hero. The product comes before explanatory content: name and wallet, heading, search/filters, then the market grid.
 
-There is one dark theme. Shared styles and tokens live in `web/src/styles.css`. `App.tsx` implements the market board and My positions with hash navigation. Browser-only community calls, NFT previews and multi-choice catalogs are absent from the rendered app. Historical source modules remain in the repository but are not part of the active product.
+The active source is `web/src/`; the static export is `dist/`. `App.tsx` renders Markets and My Positions with hash navigation. `catalog.ts` supplies twelve binary practice templates, and real verified open markets join the same board. Practice and on-chain data have separate labels, stakes and positions. There is no create-market surface. Historical modules are retained but are not imported by the active app.
 
-This document describes the final implementation. Commands, review evidence, screenshots and unperformed checks are recorded in `artifacts/validation.md`.
+This document describes implemented source values, not an approved mockup or a claim of rendered inspection. Native browsers could not create a page on this machine. Source review, declared contrast calculations and DOM interaction evidence are recorded in `artifacts/validation.md`; responsive layouts and focus confinement remain unverified in a real browser.
 
 ## Colors
 
-The canonical notation is hex. CSS custom properties in `:root` name semantic roles; components reference these tokens.
+Canonical colors are hex semantic CSS properties in `web/src/styles.css:root`. Reuse a token for its role rather than copying a visually similar value.
 
-| Token | Value | Use |
+| Token | Value | Role |
 | --- | --- | --- |
-| `--page` | `#0c0e14` | Page, header, amount fields |
-| `--surface` | `#141720` | Market cards, portfolio, templates, dialogs |
-| `--raised` | `#1c202c` | Secondary controls, selected status chip |
-| `--hover` | `#242938` | Neutral control hover |
-| `--line` | `#2b3040` | Structural borders and dividers |
-| `--control-line` | `#596176` | Input/control outlines; empty board dashed outline |
-| `--text` | `#eff1f7` | Questions, headings, primary text |
-| `--muted` | `#a0a7b8` | Supporting text, metadata, placeholders |
-| `--accent` / `--accent-hover` | `#b7a0ff` / `#c8b6ff` | Primary actions and hover |
-| `--accent-ink` / `--accent-wash` | `#181125` / `#282238` | Primary-action text / icon and selection backgrounds |
-| `--yes` / `--yes-bg` / `--yes-hover` | `#5ad8aa` / `#12362e` / `#194638` | Yes side, available payout, positive state |
-| `--no` / `--no-bg` / `--no-hover` | `#f49aaf` / `#3d222e` / `#4a2837` | No side; errors reuse the rose foreground |
-| `--focus` | `#ffffff` | Keyboard outline |
+| `--page` | `#10141c` | Canvas, header, amount field |
+| `--surface` | `#191f2b` | Cards, dialogs, search |
+| `--raised` / `--hover` | `#222a38` / `#293345` | Neutral controls and hover |
+| `--line` | `#303a4a` | Structural card/divider borders |
+| `--control-line` | `#63718a` | Inputs, selects, search and unselected radio boundaries |
+| `--text` / `--muted` | `#f0f3f8` / `#a6b1c3` | Questions/headings and supporting text |
+| `--accent` / `--accent-hover` | `#3270df` / `#2868d5` | Primary wallet/action fill and hover |
+| `--accent-ink` / `--accent-wash` | `#ffffff` / `#20304d` | Primary text and neutral explanatory illustration wells |
+| `--yes` / `--yes-bg` / `--yes-hover` | `#62ddb0` / `#173b32` / `#20503f` | Yes outcome, payout status and positive selection |
+| `--no` / `--no-bg` / `--no-hover` | `#ff96a4` / `#412731` / `#57313d` | No outcome, errors and negative selection |
+| `--focus` | `#c6ddff` | Keyboard outline |
+| `--warning` | `#f3cb80` | Unavailable RPC/storage notice |
 
-Outcome choices always include the written Yes/No label. Cards add check/cross icons, and statuses combine a dot with a written state. Selection also has an outline and a checked native radio. A cancelled market says **Cancelled**; actual claims are separately identified.
+Color is accompanied by words and icons: Yes has a check, No a cross, open states say Open, practice cards say Practice and real cards say On-chain · Sepolia. Side radios also retain the native checked state and a selected border. Status is never communicated solely by a dot.
 
-Normal-state rendered contrast measurements are retained in `artifacts/contrast.json`: primary card text 15.85:1, metadata 7.43:1, Yes percentage 7.43:1, No percentage 6.88:1, wallet action 8.28:1, selected status chip 14.39:1. These are measured solid foreground/background pairs, not a claim about every state or OS rendering.
+`MarketArt.tsx` uses decorative icon wells: orange `#463325/#ffbf82`, violet `#36304e/#c4a7fa`, mint `#203d35/#7be0b0`, blue `#253a55/#8cbcff`, yellow `#423c25/#efce72`, cyan `#213c46/#7ad6e5`, pink `#422b40/#efa6d6` (background/foreground). These are illustration palettes, not additional action colors. The mark's secondary text is `#b9c5d9`.
+
+Practice submission uses a Yes fill with `#10251d` text, or No fill with `#30131b` text. The hover fills are `#88ebc5` and `#ffb6bf`. The status words and selected native radio remain explicit.
+
+`node web/scripts/check-colors.mjs` calculates declared solid pairs. White on the primary blue is **4.65:1**, muted metadata on cards **7.62:1**, Yes on its base fill **7.31:1**, No **6.51:1**, and input boundaries against cards **3.35:1**. These are source calculations; rendered backgrounds, opacity, forced-colors and all transient states were not measured. Full results are in `artifacts/contrast.json`.
 
 ## Typography
 
-Inter is bundled locally at `web/public/fonts/InterVariable.woff2` with its SIL Open Font License. `@font-face` declares normal style, weight range 100–900 and `font-display: swap`. The interface uses only 400, 500 and 600; headings and strong text use 600. Fallbacks are `-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`. The font is preloaded from `web/index.html`; production CSS references `../fonts/InterVariable.woff2`. No font CDN is required at runtime.
+Local Inter Variable is served from `web/public/fonts/InterVariable.woff2`, preloaded in `web/index.html` and referenced from exported CSS with `../fonts/InterVariable.woff2`. Its OFL license is bundled alongside it. The face declares normal style, weights 100–900, and `font-display: swap`. The interface requests only **400, 500 and 600**, with `font-synthesis: none`; fallback order is `-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`. Actual font loading could not be observed in a browser.
 
-| Token | Size | Role |
+| Token | Implemented size | Usage |
 | --- | --- | --- |
-| `--text-xs` | 13px / `.8125rem` | Metadata, supporting copy, small controls |
-| `--text-sm` | 14px / `.875rem` | Dense interface copy, action labels |
-| `--text-base` | 16px / `1rem` | Inputs/selects on phones, panel headings |
-| `--text-lg` | 18px / `1.125rem` | Market questions and template-section heading |
-| `--text-xl` | 20px / `1.25rem` | Desktop dialog headings, percentage values |
-| `--text-display` | 32px / `2rem`; 28px / `1.75rem` at ≤639px | H1 and portfolio balances |
+| `--text-xs` | 0.75rem / 12px | Metadata, category, volume, timing, supporting copy |
+| `--text-sm` | 0.875rem / 14px | Controls, navigation, dense UI copy |
+| `--text-base` | 1rem / 16px | Market questions, phone inputs/selects, labels |
+| `--text-lg` | 1.25rem / 20px | Brand, section/dialog headings |
+| `--text-xl` | 1.75rem / 28px | Page heading, main odds, portfolio and amount input |
 
-Body line-height is 1.5; prose inside dialogs is 1.6, questions 1.5, heading defaults 1.4 and H1 1.2. H1 uses −.035em tracking and the brand uses −.02em; content otherwise has natural tracking/casing. `.num` uses tabular numerals for stable timers, balances and percentages. Questions, addresses and exact amounts wrap; no essential value is ellipsized. Descriptions use `text-wrap: pretty`; compact empty-state headings use `balance`. Stake inputs are 20px; all other editable phone controls are at least 16px.
+This is one five-size scale. Body line-height is 1.5, prose 1.6, page heading 1.2, question text 1.5, and dialog/section headings 1.4. Page heading/large odds and brand use −.035em tracking. Content otherwise uses normal casing and tracking. `strong` is 600; ordinary action emphasis uses 500 or 600.
+
+Questions are complete, wrapping button labels, not line clamps. Long identifiers use `overflow-wrap: anywhere`; exact amounts remain readable. `.num`, pool metadata and amount inputs use tabular numerals. Prose is constrained to roughly 48–74ch by context. Main prose uses `text-wrap: pretty`, and empty headings use `balance`. Inputs/selects are at least 16px on phones; stake inputs are 28px. At ≤359px the brand and modal title use existing 16px tokens. No additional font sizes are introduced by breakpoints.
 
 ## Layout
 
-The main `.page` and `.header-inner` have a 1440px maximum width. Gutters are 40px on large screens, 28px at ≤1199px, 20px at ≤639px and 16px at ≤359px. Common spacing is 8/12px within controls, 16/20/24px between related elements, and 28/32/40px between major groups. These are CSS values, not a separate spacing-token system.
+Shared layout lives in `styles.css`. `.header-inner` and `.page` have a **1392px maximum border-box width** with **40px side padding** on desktop; this gives a 1312px content width. The footer aligns to a 1312px maximum width. Gaps use 4/8px for compact metadata, 10/12px within controls/cards, 14/16/18/20px between related elements, and 24/28/34/36/40px between larger groups.
 
-The heading is compact, followed by the network/loaded-market summary and board. There is no marketing hero before the product. Filters sit directly above the results. When the chain has no markets, irrelevant filters disappear and the empty board presents Create market. Templates follow the board, clearly described as templates rather than open bets.
+`.market-grid` uses `minmax(0,1fr)` columns and a **16px gap**. Cards are flex columns; the action row aligns across cards with `margin-top: auto`. The heading has a minimum height but remains free to grow with a long question. Filters precede the content they affect. Search and sort are not hidden on phones. Categories wrap; no horizontal scroller conceals options.
 
-| Width | Implemented behavior |
+| Width | Source-defined response |
 | --- | --- |
-| ≥1200px | Board beside a 292px sidebar, 32px gap; market cards in two columns; three template columns |
-| ≥1600px | Sidebar becomes 300px inside the same maximum page width |
-| 980–1199px | Sidebar is 260px, main gap 24px; templates become compact full-width rows |
-| ≤979px | Board fills the page; portfolio and guide move below in two columns; templates use three columns |
-| ≤639px | One market/template/sidebar column; header navigation moves to its own row; search spans a row above two selects; H1 is 28px; desktop Create market shortcut is hidden |
-| ≤359px | 16px gutters, smaller wordmark and compact status controls |
+| ≥1200px | Four market columns; one header row; 40px page gutters |
+| ≥1500px | Same capped content width, 40px top padding and 20px card padding |
+| ≤1199px | Three columns, 28px gutters, network label hidden from the crowded header |
+| ≤899px | Two columns; footer wraps; position row actions can wrap below the question |
+| ≤639px | One market column with 14px gaps, 20px gutters; nav moves below name/wallet; search becomes full-width with two selects beneath; categories wrap; phone sheets anchor to the bottom |
+| ≤359px | 16px gutters; compact wordmark and existing 12px wallet-label token; questions get more minimum height |
 
-At 390×844 the populated board's first card and both side buttons are visible on the first screen. The real zero-market state puts Create market higher, without empty search/filter chrome. The header retains the product name and one wallet control. No fixed bottom navigation covers the board. Layout does not hide document overflow to mask errors.
+The first phone screen is deliberately compact: no marketing hero, account sidebar or creation prompt precedes the market. Both side actions are normal-flow buttons. There is no fixed bottom navigation covering content and no global overflow hiding. This structure is intended to show a market and its main action at 390×844; that exact rendered condition remains **unverified** because native browsers failed before loading a page.
 
-Hash navigation returns to the top and focuses `main`. The skip link preserves the active view. Markets initially filters to Open; My positions defaults to All positions. Totals and position coverage explicitly refer to loaded markets; pagination and number lookup find earlier entries.
+Positions use a three-column summary on desktop, two columns plus a full-width practice total on phones. Practice positions are readable rows with question, state and separately written side stakes. On-chain positions retain cards and direct claim controls. Empty/filter/error states provide a next action. Hash navigation scrolls to the top and focuses `main`.
 
 ## Elevation & Depth
 
-The system is flat. Surfaces use a tonal background and one structural border, without shadows or hover lift. Active navigation has a 2px violet underline. Cards use a three-pixel Yes/No pool bar as a secondary numeric cue.
+Surfaces are flat, with a tonal fill and a single structural border; there are no card shadows, glows, floating panels or gradient text. Selected navigation has a 3px blue underline. Decorative SVGs stay within their color wells.
 
-Native dialogs occupy the browser top layer. Their backdrop is `#000000b3` with a 4px blur. Desktop dialogs are at most 480px wide and leave 16px side margins; phone dialogs span the viewport as bottom sheets with safe-area padding. `max-width: none` overrides the browser dialog default so it cannot leave an asymmetric phone gutter. Dialog contents scroll; the phone form's submit action is sticky within that scroll area. Background page content is inert while a modal is open.
+`Modal.tsx` uses native `dialog.showModal()` for the top layer. The backdrop is `#070a11c9` with a 4px blur. Desktop dialogs are 480px wide, at most `100vw - 32px`, and capped at `100dvh - 48px`. Phone dialogs are full-width, have only rounded top corners, cap at `100dvh - 20px`, and include safe-area bottom padding. The submit action can remain sticky inside a phone sheet's own scrolling content; page content is not covered by site navigation.
 
 ## Shapes
 
-Controls and icon wells use 8px radii; templates use 10px; market cards, portfolio and empty board use 12px; dialogs use 16px. Phone sheets round only their top corners. Status dots and illustrative icon wells are circular. Empty boards use a dashed outline to distinguish the state from a funded market. The compact hamster/check favicon is local original vector artwork.
+`--radius: 12px` is the market-card/summary radius. `--control-radius: 7px` is the shared action/input radius. Art wells use 10px, small amount controls 5px, category chips 6px, count labels 4px, and dialogs 16px. Status dots and success/empty illustration wells are circular. The blue hamster/check favicon is original local SVG artwork.
 
 ## Components
 
-| Source | Reuse and behavior |
+| Source / pattern | Usage and states |
 | --- | --- |
-| `App.tsx` | Market/position views, filters, sorting, pagination, number lookup, templates, portfolio summary and help. Empty states have creation, connection or filter-recovery actions. Read failures expose Retry and label cached data. |
-| `MarketCard.tsx` | `market`, optional `position`, `now`, `settled`, `busy`, `onOpen`. Complete question, category, written phase, countdown, Yes/No percentage actions, volume and position. Closed cards open details; settlement/claim controls appear when applicable. `SkeletonCard` preserves the loading structure without inventing data. |
-| `model.ts` | Question/side formatting and exact pool/payout math. Empty pools display 50/50. Funded percentages represent staked-pool shares, not fixed prices or guaranteed probability. Yes requires strictly more than the threshold; exactly the target is No. |
-| `MarketDialog.tsx` | Bet slip with native side radios, stake, quick amounts, estimated payout and one wallet-confirmed submit. Details disclose exact pools, timing, strict threshold, refund rules and contract link. Invalid amounts focus the field; errors keep the draft. Connecting leaves the bet slip mounted. Success replaces betting fields with a confirmation and Done. |
-| `CreateDialog.tsx` | Native daily/weekly selection, uint64 target field/stepper, round-aligned start options and date preview. Daily/weekly templates start with a blank target; the activity template uses the explicit any-block condition. Drafts survive connection. Success offers Done. |
-| `Modal.tsx` | Native `dialog.showModal()`, named heading, Escape/backdrop/close handling, body-scroll preservation and focus restoration. The wallet sheet can stack above a bet slip without losing the draft. |
-| `Wallet.tsx`, `open-in.ts` | EIP-6963 named extensions; four mobile wallet-browser links; Coinbase Wallet/Smart Wallet; account view, disconnect and Sepolia switch/add flow. No relay or project ID. Header control is enabled before any market read completes. |
-| `icons.tsx` | One outline SVG set, using `currentColor`, decorative accessibility semantics and a consistent 1.7px stroke. Wallet marks remain the bundled official multicolor assets. |
-| `styles.css` | `.primary`, `.secondary`, `.ghost`, `.text-button`, `.icon-button`, `.field-label`, `.text-input`, `.chip` and all responsive primitives. |
+| `App.tsx` | Markets/My Positions, hash navigation, search/category/type filters, global sorting, live snapshot and template composition. Twelve cards by default. RPC errors preserve practice; public data remains stable across connection while account positions clear. |
+| `catalog.ts` | Twelve fixed binary questions, UTC window rotation, frozen saved positions, address-scoped practice storage, exact bigint pool math, input validation and safe storage parsing. No template is given an invented on-chain market ID. |
+| `MarketCard.tsx` | Real market question, art, actual pool split/volume, phase/time, side buttons, position and claim/refund/resolution actions. `onOpen` chooses a side or details. Real cards always identify Sepolia and their actual contract ID. |
+| Practice card in `App.tsx` | Same question/odds/action hierarchy. Props come from `TemplateMarket` and actual local practice pools. A Practice label and Your position link distinguish provenance and ownership. |
+| `MarketArt.tsx` | Small original hamster, blocks, bolt, moon, chart and wheel SVGs. Decorative, `aria-hidden`, one stroke system; no remote artwork dependency. |
+| `PracticeDialog.tsx` | Native side radios, precise amount, quick amounts, honest pool estimate, before-submit virtual-ETH disclosure, rules/dates, visible validation. Success offers View my positions/Keep exploring and discloses failed persistence. Connection retains the draft. |
+| `MarketDialog.tsx` | Existing real-money-in-testnet flow: stake validation, pool estimate, simulation/wallet/receipt notices, wrong-chain disablement, claims, refunds and resolution. Exact pool/rule details remain available. |
+| `Wallet.tsx`, `open-in.ts` | Existing EIP-6963 named extensions, four mobile browser links, Coinbase Wallet/Smart Wallet, account/disconnect and switch/add Sepolia. Official marks remain local; no relay/project ID. |
+| `Modal.tsx` | Named native dialog, close button, Escape/backdrop close, scroll preservation and focus return. A wallet dialog can open above a slip. Native inertness/focus confinement was not verified in the DOM emulator. |
+| Shared CSS | `.primary`, `.secondary`, `.text-button`, `.icon-button`, `.search-field`, `.amount-field`, `.side-choice`, `.category-chip`, `.empty`, `.position-summary`, `.position-row`. Hover, pressed, focus, selected, disabled, pending and recoverable error states have explicit styles/copy. |
 
-Most controls are at least 44px tall. Card sides are at least 58px; phone wallet rows at least 56px. The compact refresh action and footer/help links are 28/32px with spacing. Native disabled states are dimmed to 60%. Hover applies only to hover-capable devices. Focus is a 2px white outline with a 3px offset, including the wrapping label of visually hidden radios; forced-colors mode uses system Highlight.
+Market side buttons are at least 46px tall on desktop and 48px on phones. Wallet rows are at least 56px; modal close targets are 44px; compact categories remain at least 36px. Native buttons/links/inputs are used rather than clickable divs. The skip link precedes header navigation. Focus is a 2px `--focus` outline offset by 3px, with the same treatment on a radio's wrapping label. Forced-colors mode uses system Highlight.
 
-Transitions name only background color, text color and border color at 150ms. Press feedback uses `.96` scale only when reduced motion is not requested. Reduced motion removes animation, transitions and smooth scrolling. Loading skeletons are static. Error and transaction messages persist and use inline field associations or status/alert regions.
+Transitions only run under `prefers-reduced-motion: no-preference`, naming background, text and border colors for 150ms with `cubic-bezier(.2,0,0,1)`. Press feedback uses .96 scale. There are no entrance sequences or endless animations. Error messages persist with alert/status semantics and field descriptions.
 
 ## Do's and Don'ts
 
-- Start another view with `.page`, `.page-heading` and the same six-size scale; use hash navigation for static hosting.
-- Use violet for the primary action and Yes/No colors for outcome meaning. Keep neutral secondary actions subordinate.
-- Keep questions, side choices and a recoverable empty state ahead of explanatory content.
-- Preserve exact on-chain semantics, complete values, test-ETH context and loaded-market coverage labels.
-- Use native controls and `Modal`; label every new control and recheck its focus path.
-- Keep fixtures in validation code. Never ship fabricated markets, odds, volume, balances or community results.
-- Keep runtime assets local, rebuild `dist/` after source changes and test from a subpath.
+- Start new views with `.page` and `.page-heading`; reuse the five-size scale and responsive gutters.
+- Keep the question and two outcomes ahead of explanation. Use blue for primary actions and Yes/No colors for outcomes.
+- Keep provenance visible. Practice remains local/virtual; on-chain data requires verified deployment reads. Never seed fake volume, balances or contract IDs.
+- Use `Modal` and native form controls; retain names, keyboard paths, precise amounts and readable errors.
+- Keep normal-case labels and full wrapping questions. Extend spacing rather than clip critical text.
+- Use hash navigation, bundle runtime assets, rebuild `dist/`, and recheck the subpath export after source changes.
+- Treat this document's responsive behavior as source-defined until it has been inspected in an actual browser; the DOM emulator cannot certify layout or accessibility.
 
-Design guidance attribution and licenses are retained in `docs/DESIGN_GUIDANCE_LICENSE.txt` and `THIRD_PARTY.md` (Better Interface / Impeccable). Inter's license is bundled beside the font.
+Guidance attribution and licenses remain in `THIRD_PARTY.md` and `docs/DESIGN_GUIDANCE_LICENSE.txt`. The local Inter license and official wallet-mark notices accompany their assets. `share.svg` is the editable source for the 1200×630 social PNG, which is artwork rather than a product screenshot.

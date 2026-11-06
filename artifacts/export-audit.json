@@ -1,10 +1,18 @@
 {
   "export": "dist/",
-  "fileCount": 16,
-  "exportBytes": 1199723,
+  "fileCount": 17,
+  "exportBytes": 1220529,
   "localReferences": [
     {
-      "from": "assets/index-DR2oyfZW.css",
+      "from": "assets/index-C5ZF3mmO.js",
+      "asset": "./ccip-DRxdsv7r.js"
+    },
+    {
+      "from": "assets/index-C5ZF3mmO.js",
+      "asset": "./index-DzQMZYeo.js"
+    },
+    {
+      "from": "assets/index-KJRRKaK5.css",
       "asset": "../fonts/InterVariable.woff2"
     },
     {
@@ -17,11 +25,15 @@
     },
     {
       "from": "index.html",
-      "asset": "./assets/index-7n4AVTCB.js"
+      "asset": "./assets/index-C5ZF3mmO.js"
     },
     {
       "from": "index.html",
-      "asset": "./assets/index-DR2oyfZW.css"
+      "asset": "./assets/index-KJRRKaK5.css"
+    },
+    {
+      "from": "index.html",
+      "asset": "./share.png"
     }
   ],
   "absoluteAssetUrls": [],
@@ -35,21 +47,18 @@
   },
   "protectedChanges": [],
   "generatedPathsInSubmission": [],
-  "addedOrChangedFileBytes": 2479504,
+  "submodules": [],
+  "addedOrChangedFileBytes": 1135139,
   "budgetBytes": 8388608,
   "accounting": "Conservative full sizes of added/changed files; excludes removed files and disposable assignment/scratch inputs. Git binary deltas may be smaller. The report itself is finalized on a subsequent audit.",
   "submissionFiles": [
     {
       "path": "DESIGN.md",
-      "bytes": 11520
+      "bytes": 13166
     },
     {
       "path": "README.md",
-      "bytes": 21853
-    },
-    {
-      "path": "THIRD_PARTY.md",
-      "bytes": 3214
+      "bytes": 22116
     },
     {
       "path": "artifacts/chain-observation.json",
@@ -57,175 +66,135 @@
     },
     {
       "path": "artifacts/contrast.json",
-      "bytes": 840
+      "bytes": 2719
     },
     {
       "path": "artifacts/export-audit.json",
-      "bytes": 4757
+      "bytes": 3993
     },
     {
       "path": "artifacts/interaction-results.json",
-      "bytes": 2250
-    },
-    {
-      "path": "artifacts/live-read-results.json",
-      "bytes": 1045
-    },
-    {
-      "path": "artifacts/screenshots/fixture-1440.png",
-      "bytes": 92415
-    },
-    {
-      "path": "artifacts/screenshots/fixture-320.png",
-      "bytes": 43462
-    },
-    {
-      "path": "artifacts/screenshots/fixture-390.png",
-      "bytes": 48255
-    },
-    {
-      "path": "artifacts/screenshots/keyboard-focus-390.png",
-      "bytes": 44497
-    },
-    {
-      "path": "artifacts/screenshots/live-1440.png",
-      "bytes": 90047
-    },
-    {
-      "path": "artifacts/screenshots/live-390.png",
-      "bytes": 43802
-    },
-    {
-      "path": "artifacts/screenshots/mobile-bet-slip.png",
-      "bytes": 45349
-    },
-    {
-      "path": "artifacts/screenshots/positions-1440.png",
-      "bytes": 109949
+      "bytes": 1989
     },
     {
       "path": "artifacts/taste.json",
-      "bytes": 76170
+      "bytes": 401
     },
     {
       "path": "artifacts/validation.md",
-      "bytes": 14978
+      "bytes": 14331
     },
     {
       "path": "dist/favicon.svg",
-      "bytes": 337
+      "bytes": 334
     },
     {
       "path": "dist/index.html",
-      "bytes": 1537
+      "bytes": 1611
     },
     {
       "path": "dist/share.png",
-      "bytes": 37555
+      "bytes": 51680
     },
     {
       "path": "web/index.html",
-      "bytes": 1438
+      "bytes": 1512
     },
     {
       "path": "web/public/favicon.svg",
-      "bytes": 337
+      "bytes": 334
     },
     {
       "path": "web/public/share.png",
-      "bytes": 37555
-    },
-    {
-      "path": "web/src/App.tsx",
-      "bytes": 24013
-    },
-    {
-      "path": "web/src/CreateDialog.tsx",
-      "bytes": 7677
-    },
-    {
-      "path": "web/src/MarketCard.tsx",
-      "bytes": 4219
-    },
-    {
-      "path": "web/src/MarketDialog.tsx",
-      "bytes": 10561
-    },
-    {
-      "path": "web/src/icons.tsx",
-      "bytes": 2470
-    },
-    {
-      "path": "web/src/model.ts",
-      "bytes": 8074
-    },
-    {
-      "path": "web/src/styles.css",
-      "bytes": 31697
-    },
-    {
-      "path": "web/tests/browser-check.mjs",
-      "bytes": 34198
-    },
-    {
-      "path": "web/tests/model.test.mjs",
-      "bytes": 5485
-    },
-    {
-      "path": "artifacts/screenshots/live-creation-390.png",
-      "bytes": 42541
-    },
-    {
-      "path": "artifacts/screenshots/wallet-390.png",
-      "bytes": 53721
-    },
-    {
-      "path": "dist/assets/ccip-DxJGY8LW.js",
-      "bytes": 2888
-    },
-    {
-      "path": "dist/assets/index-7n4AVTCB.js",
-      "bytes": 653413
-    },
-    {
-      "path": "dist/assets/index-DR2oyfZW.css",
-      "bytes": 27314
-    },
-    {
-      "path": "dist/assets/index-p9mva7bh.js",
-      "bytes": 109915
-    },
-    {
-      "path": "dist/fonts/InterVariable.woff2",
-      "bytes": 352240
-    },
-    {
-      "path": "dist/fonts/LICENSE-Inter.txt",
-      "bytes": 4380
-    },
-    {
-      "path": "web/public/fonts/InterVariable.woff2",
-      "bytes": 352240
-    },
-    {
-      "path": "web/public/fonts/LICENSE-Inter.txt",
-      "bytes": 4380
+      "bytes": 51680
     },
     {
       "path": "web/scripts/audit-export.mjs",
-      "bytes": 3463
-    },
-    {
-      "path": "web/scripts/check-live.mjs",
-      "bytes": 3950
-    },
-    {
-      "path": "web/scripts/observe-chain.mjs",
-      "bytes": 3054
+      "bytes": 4520
     },
     {
       "path": "web/scripts/render-share.mjs",
-      "bytes": 2838
+      "bytes": 1028
+    },
+    {
+      "path": "web/src/App.tsx",
+      "bytes": 37176
+    },
+    {
+      "path": "web/src/MarketCard.tsx",
+      "bytes": 5056
+    },
+    {
+      "path": "web/src/data.ts",
+      "bytes": 5636
+    },
+    {
+      "path": "web/src/model.ts",
+      "bytes": 8102
+    },
+    {
+      "path": "web/src/styles.css",
+      "bytes": 34370
+    },
+    {
+      "path": "web/tests/browser-check.mjs",
+      "bytes": 13834
+    },
+    {
+      "path": "artifacts/browser-runtime.json",
+      "bytes": 558
+    },
+    {
+      "path": "dist/assets/ccip-DRxdsv7r.js",
+      "bytes": 2888
+    },
+    {
+      "path": "dist/assets/index-C5ZF3mmO.js",
+      "bytes": 657253
+    },
+    {
+      "path": "dist/assets/index-DzQMZYeo.js",
+      "bytes": 109915
+    },
+    {
+      "path": "dist/assets/index-KJRRKaK5.css",
+      "bytes": 27267
+    },
+    {
+      "path": "dist/share.svg",
+      "bytes": 2817
+    },
+    {
+      "path": "web/public/share.svg",
+      "bytes": 2817
+    },
+    {
+      "path": "web/scripts/check-colors.mjs",
+      "bytes": 2060
+    },
+    {
+      "path": "web/src/MarketArt.tsx",
+      "bytes": 2410
+    },
+    {
+      "path": "web/src/PracticeDialog.tsx",
+      "bytes": 7966
+    },
+    {
+      "path": "web/src/catalog.ts",
+      "bytes": 6996
+    },
+    {
+      "path": "web/tests/catalog.test.mjs",
+      "bytes": 4747
+    },
+    {
+      "path": "web/tests/dom-check.mjs",
+      "bytes": 19524
+    },
+    {
+      "path": "web/tests/fixtures.mjs",
+      "bytes": 10722
     }
   ]
 }

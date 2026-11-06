@@ -1,38 +1,127 @@
-[
-  {
-    "selector": ".question-button",
-    "foreground": "rgb(239, 241, 247)",
-    "background": "rgb(20, 23, 32)",
-    "ratio": 15.85
-  },
-  {
-    "selector": ".card-foot",
-    "foreground": "rgb(160, 167, 184)",
-    "background": "rgb(20, 23, 32)",
-    "ratio": 7.43
-  },
-  {
-    "selector": ".odds-yes .odds-price",
-    "foreground": "rgb(90, 216, 170)",
-    "background": "rgb(18, 54, 46)",
-    "ratio": 7.43
-  },
-  {
-    "selector": ".odds-no .odds-price",
-    "foreground": "rgb(244, 154, 175)",
-    "background": "rgb(61, 34, 46)",
-    "ratio": 6.88
-  },
-  {
-    "selector": ".wallet-button",
-    "foreground": "rgb(24, 17, 37)",
-    "background": "rgb(183, 160, 255)",
-    "ratio": 8.28
-  },
-  {
-    "selector": ".chip.active",
-    "foreground": "rgb(239, 241, 247)",
-    "background": "rgb(28, 32, 44)",
-    "ratio": 14.39
-  }
-]
+{
+  "method": "WCAG relative luminance of declared opaque CSS tokens; not rendered measurement",
+  "source": "web/src/styles.css",
+  "results": [
+    {
+      "name": "body",
+      "foreground": "#f0f3f8",
+      "background": "#10141c",
+      "ratio": 16.58,
+      "threshold": 4.5,
+      "passed": true
+    },
+    {
+      "name": "card question",
+      "foreground": "#f0f3f8",
+      "background": "#191f2b",
+      "ratio": 14.84,
+      "threshold": 4.5,
+      "passed": true
+    },
+    {
+      "name": "metadata",
+      "foreground": "#a6b1c3",
+      "background": "#191f2b",
+      "ratio": 7.62,
+      "threshold": 4.5,
+      "passed": true
+    },
+    {
+      "name": "metadata on page",
+      "foreground": "#a6b1c3",
+      "background": "#10141c",
+      "ratio": 8.52,
+      "threshold": 4.5,
+      "passed": true
+    },
+    {
+      "name": "secondary",
+      "foreground": "#f0f3f8",
+      "background": "#222a38",
+      "ratio": 12.96,
+      "threshold": 4.5,
+      "passed": true
+    },
+    {
+      "name": "secondary hover",
+      "foreground": "#f0f3f8",
+      "background": "#293345",
+      "ratio": 11.42,
+      "threshold": 4.5,
+      "passed": true
+    },
+    {
+      "name": "primary",
+      "foreground": "#ffffff",
+      "background": "#3270df",
+      "ratio": 4.65,
+      "threshold": 4.5,
+      "passed": true
+    },
+    {
+      "name": "primary hover",
+      "foreground": "#ffffff",
+      "background": "#2868d5",
+      "ratio": 5.21,
+      "threshold": 4.5,
+      "passed": true
+    },
+    {
+      "name": "Yes",
+      "foreground": "#62ddb0",
+      "background": "#173b32",
+      "ratio": 7.31,
+      "threshold": 4.5,
+      "passed": true
+    },
+    {
+      "name": "Yes hover",
+      "foreground": "#62ddb0",
+      "background": "#20503f",
+      "ratio": 5.48,
+      "threshold": 4.5,
+      "passed": true
+    },
+    {
+      "name": "No",
+      "foreground": "#ff96a4",
+      "background": "#412731",
+      "ratio": 6.51,
+      "threshold": 4.5,
+      "passed": true
+    },
+    {
+      "name": "No hover",
+      "foreground": "#ff96a4",
+      "background": "#57313d",
+      "ratio": 5.31,
+      "threshold": 4.5,
+      "passed": true
+    },
+    {
+      "name": "focus",
+      "foreground": "#c6ddff",
+      "background": "#191f2b",
+      "ratio": 11.94,
+      "threshold": 3,
+      "passed": true
+    },
+    {
+      "name": "input boundary",
+      "foreground": "#63718a",
+      "background": "#191f2b",
+      "ratio": 3.35,
+      "threshold": 3,
+      "passed": true
+    },
+    {
+      "name": "input boundary on page",
+      "foreground": "#63718a",
+      "background": "#10141c",
+      "ratio": 3.74,
+      "threshold": 3,
+      "passed": true
+    }
+  ],
+  "renderedChecksPerformed": false
+}

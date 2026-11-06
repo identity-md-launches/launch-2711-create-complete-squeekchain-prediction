@@ -37,7 +37,7 @@ export function startRound(genesis: bigint, now: bigint, lead: number) {
   if (genesis <= 0n || genesis > now || ![7200, 21600, 86400].includes(lead)) throw new Error('Unable to calculate the window. Refresh chain data and retry.');
   return (now + BigInt(lead) - genesis + 599n) / 600n + 1n;
 }
-export function payout(m: Market, yes: boolean, stake: bigint, previous = 0n) {
+export function payout(m: Pick<Market, 'yesPool' | 'noPool'>, yes: boolean, stake: bigint, previous = 0n) {
   const side = yes ? m.yesPool : m.noPool;
   const opposite = yes ? m.noPool : m.yesPool;
   if (opposite === 0n) return null;

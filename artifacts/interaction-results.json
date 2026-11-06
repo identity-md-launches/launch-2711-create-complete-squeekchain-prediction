@@ -1,78 +1,59 @@
-[
-  {
-    "name": "Open binary markets, pool odds and local assets render without page errors",
-    "passed": true
-  },
-  {
-    "name": "Responsive board at 320, 390, 800, 980 and 1440; side buttons visible on first 390 screen",
-    "passed": true
-  },
-  {
-    "name": "Status, duration, search, sort and clear filters change the board",
-    "passed": true
-  },
-  {
-    "name": "Stake validation, quick amounts and payout rules are usable before connecting",
-    "passed": true
-  },
-  {
-    "name": "Connect preserves side and stake; rejection can retry and sends correct bet calldata",
-    "passed": true
-  },
-  {
-    "name": "Empty pools begin at 50/50 and percentages update after confirmed Yes and No bets",
-    "passed": true
-  },
-  {
-    "name": "Creation draft and chosen duration survive connection; creation sends exact target",
-    "passed": true
-  },
-  {
-    "name": "My positions shows stakes, claimable payouts and successful claims",
-    "passed": true
-  },
-  {
-    "name": "Resolve certified results and open unmatched refunds through market details",
-    "passed": true
-  },
-  {
-    "name": "Disconnected positions offer connect; navigation and market help work",
-    "passed": true
-  },
-  {
-    "name": "Wrong network blocks betting, switch recovers and account changes close the slip",
-    "passed": true
-  },
-  {
-    "name": "Phone wallet picker has all four wallet browsers and Coinbase Smart Wallet",
-    "passed": true
-  },
-  {
-    "name": "Keyboard entry, focus ring, modal inert background and focus return",
-    "passed": true
-  },
-  {
-    "name": "Zero markets renders an honest, actionable first screen at 320, 390 and 1440",
-    "passed": true
-  },
-  {
-    "name": "RPC outage has Retry and recovers; runtime mismatch fails closed",
-    "passed": true
-  },
-  {
-    "name": "Long uint64 questions fit cards and slips without clipping",
-    "passed": true
-  },
-  {
-    "name": "Older-market lookup validates input and locates a market; load older reads more",
-    "passed": true
-  },
-  {
-    "name": "Axe WCAG scans and measured rendered contrast on board and bet slip",
-    "passed": true
-  },
-  {
-    "name": "No uncaught JavaScript errors or missing local resources across interaction scenarios",
-    "passed": true
-  }
-]
+{
+  "runtime": "happy-dom (no layout engine)",
+  "target": "dist/index.html production JavaScript chunks rebundled as IIFE",
+  "results": [
+    {
+      "name": "Zero chain markets renders twelve open binary cards with odds, volume, time and no creation action",
+      "passed": true
+    },
+    {
+      "name": "Category, search, no-results recovery and source filters work",
+      "passed": true
+    },
+    {
+      "name": "Practice side, amount validation, quick amounts and rules work before connecting",
+      "passed": true
+    },
+    {
+      "name": "Connect preserves No draft; practice bet updates odds, volume and positions without a transaction",
+      "passed": true
+    },
+    {
+      "name": "Opposing practice bets change odds to 50/50 and volume sorting prioritizes their market",
+      "passed": true
+    },
+    {
+      "name": "Live cards replace templates; wallet rejection recovers and correct deployed bet calldata is sent",
+      "passed": true
+    },
+    {
+      "name": "On-chain positions claim winnings with the connected recipient",
+      "passed": true
+    },
+    {
+      "name": "Wrong chain disables real bets; switch recovers; account changes close the slip",
+      "passed": true
+    },
+    {
+      "name": "Phone wallet chooser lists all four browser links and Coinbase Smart Wallet",
+      "passed": true
+    },
+    {
+      "name": "Runtime mismatch disables chain submissions while the practice board stays usable",
+      "passed": true
+    },
+    {
+      "name": "Saved practice positions reload with their original windows and settle only from certified endpoints",
+      "passed": true
+    },
+    {
+      "name": "Unavailable storage is disclosed in the success dialog and does not lose the in-memory position",
+      "passed": true
+    },
+    {
+      "name": "Initial RPC failure retains all ready practice cards and permits a practice prediction",
+      "passed": true
+    }
+  ],
+  "rpcAndWallet": "Mocked. No keys, signatures or chain broadcasts."
+}
